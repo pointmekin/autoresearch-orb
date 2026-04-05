@@ -20,7 +20,7 @@ It is modeled after karpathy/autoresearch: you modify `strategy.py`, run the bac
 
 To begin a new research run, work with the user to:
 
-1. **Agree on a run tag**: propose a tag based on today's date (e.g. `apr5`). The branch `autoresearch/<tag>` must not already exist.
+1. **Agree on a run tag prefix**: propose a prefix based on today's date (e.g. `apr5`). The branch `autoresearch/<prefix>` must not already exist. Each experiment iteration appends a zero-padded counter to this prefix: `apr5_001`, `apr5_002`, etc. Start the counter at `001` and increment it for every run, including discards and crashes.
 2. **Create the branch**: `git checkout -b autoresearch/<tag>` from current master.
 3. **Read the in-scope files**: Read these files in full before experimenting:
    - `README.md` — project overview and quick-start
@@ -78,22 +78,24 @@ We optimize for robustness across the whole portfolio, not for a single pair. A 
 ## Running an Experiment
 
 ```bash
-python strategy.py --tag <tag> > logs/<tag>.log 2>&1
+python strategy.py --tag <prefix>_NNN > logs/<prefix>_NNN.log 2>&1
 ```
+
+Where `NNN` is the zero-padded iteration counter (e.g. `apr5_001`, `apr5_002`). Increment for every run, including discards and crashes — never reuse a tag.
 
 Extract the key metrics:
 ```bash
-grep "mean_sharpe\|median_sharpe\|mean_max_drawdown\|mean_total_return" logs/<tag>.log
+grep "mean_sharpe\|median_sharpe\|mean_max_drawdown\|mean_total_return" logs/<prefix>_NNN.log
 ```
 
 Or read the full summary:
 ```bash
-tail -n 40 logs/<tag>.log
+tail -n 40 logs/<prefix>_NNN.log
 ```
 
 If the script crashes, check:
 ```bash
-tail -n 60 logs/<tag>.log
+tail -n 60 logs/<prefix>_NNN.log
 ```
 
 ---
@@ -153,12 +155,13 @@ Do NOT commit `results.tsv` — leave it untracked by git.
 2. Think about what to change in `strategy.py` (see Ideas section below)
 3. Edit `strategy.py` directly
 4. `git add strategy.py && git commit -m "experiment: <short description>"`
-5. Run experiment: `python strategy.py --tag <tagNNN> > logs/<tagNNN>.log 2>&1`
-6. Extract metrics: `grep "mean_sharpe\|mean_max_drawdown\|mean_total_return" logs/<tagNNN>.log`
-7. If empty output → crash. Run `tail -n 60 logs/<tagNNN>.log` to debug. Fix if trivial, skip if not.
-8. Log result to `results.tsv`
-9. If `mean_sharpe` improved → **advance** (keep commit, this is the new baseline)
-10. If `mean_sharpe` is equal or worse → `git reset HEAD~1` to discard, revert changes
+5. Run experiment: `python strategy.py --tag <prefix>_NNN > logs/<prefix>_NNN.log 2>&1`
+6. Extract metrics: `grep "mean_sharpe\|mean_max_drawdown\|mean_total_return" logs/<prefix>_NNN.log`
+7. If empty output → crash. Run `tail -n 60 logs/<prefix>_NNN.log` to debug. Fix if trivial, skip if not.
+8. **Stage and amend the commit to include the log and results**: `git add logs/<prefix>_NNN.log results/<prefix>_NNN.json && git commit --amend --no-edit`
+9. Log result to `results.tsv`
+10. If `mean_sharpe` improved → **advance** (keep commit, this is the new baseline)
+11. If `mean_sharpe` is equal or worse → `git reset HEAD~1` to discard, revert changes
 
 Commit only the working experiments. The TSV captures the full history including discards.
 
