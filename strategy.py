@@ -40,11 +40,11 @@ from prepare import (
 PARAMS = {
     # Opening range duration (bars). With 1h bars: 1 bar = 1 hour.
     # e.g., opening_range_bars=2 means the first 2 hours define the range.
-    "opening_range_bars": 2,
+    "opening_range_bars": 3,
 
     # Breakout threshold: how far price must exceed the range high/low to trigger entry.
     # 0.0 = any breakout, 0.001 = 0.1% above range high.
-    "breakout_threshold": 0.001,
+    "breakout_threshold": 0.002,
 
     # Stop loss as fraction of the opening range height.
     # e.g., 0.5 means stop = entry ± 50% of (range_high - range_low)
@@ -52,10 +52,10 @@ PARAMS = {
 
     # Take profit as fraction of the opening range height.
     # e.g., 1.5 means TP = entry ± 150% of range height
-    "take_profit_range_multiple": 1.5,
+    "take_profit_range_multiple": 2.0,
 
     # Maximum number of trades per day per symbol (0 = unlimited)
-    "max_trades_per_day": 2,
+    "max_trades_per_day": 1,
 
     # Close all positions at end of session (True = no overnight holds)
     "close_at_session_end": True,
@@ -228,6 +228,7 @@ def run_experiment(tag: str, params: dict = None, optimize: bool = False):
                 cash=100_000,
                 commission=0.0002,   # 2 bps (realistic for forex/CFD)
                 exclusive_orders=True,
+                finalize_trades=True,
             )
 
             if optimize:
