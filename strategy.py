@@ -49,7 +49,7 @@ PARAMS = {
     "stop_loss_range_multiple": 1.8,
 
     # Take profit as fraction of the opening range height.
-    "take_profit_range_multiple": 1.0,
+    "take_profit_range_multiple": 0.9,
 
     # Maximum number of trades per session per symbol (0 = unlimited)
     "max_trades_per_session": 1,
