@@ -46,7 +46,7 @@ PARAMS = {
     "breakout_threshold": 0.001,
 
     # Stop loss as fraction of the opening range height.
-    "stop_loss_range_multiple": 1.0,
+    "stop_loss_range_multiple": 1.5,
 
     # Take profit as fraction of the opening range height.
     "take_profit_range_multiple": 1.0,
