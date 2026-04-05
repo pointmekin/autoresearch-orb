@@ -223,11 +223,19 @@ def run_experiment(tag: str, params: dict = None, optimize: bool = False):
         })
         df = df[["Open", "High", "Low", "Close", "Volume"]].dropna()
 
+        # Strip timezone info (backtesting.py doesn't handle tz-aware indexes)
+        if hasattr(df.index, 'tz') and df.index.tz is not None:
+            df.index = df.index.tz_localize(None)
+
         if len(df) < 50:
             print(f"  [SKIP] {sym}: insufficient data ({len(df)} rows)")
             continue
 
         train_df, test_df = split_train_test(df)
+
+        # If train split is empty (data < OOS window), use all data for training
+        if len(train_df) < 50:
+            train_df = df
 
         # ── Set class-level params ────────────────────────────────────────
         ORBStrategy.opening_range_bars         = params["opening_range_bars"]
