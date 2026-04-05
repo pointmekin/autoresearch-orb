@@ -61,7 +61,7 @@ PARAMS = {
     "close_at_session_end": True,
 
     # Day-of-week filter: list of allowed weekdays (0=Mon, 4=Fri)
-    "allowed_weekdays": [0, 1, 2, 3, 4],  # Mon–Fri
+    "allowed_weekdays": [1, 2, 3, 4],  # Tue–Fri (skip choppy Monday)
 
     # Sessions: list of (start_hour_utc, start_minute_utc, end_hour_utc, end_minute_utc)
     # London: 08:00–12:30 UTC  |  New York: 13:30–20:00 UTC
