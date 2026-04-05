@@ -62,16 +62,16 @@ def generate_html(runs):
              background: #1a1a2e; padding: 12px 16px; border-radius: 6px; margin-bottom: 16px; }}
   #header .title {{ color: #e0e0ff; font-size: 13px; font-weight: bold; letter-spacing: 1px; }}
   #header .meta {{ color: #555; font-size: 11px; }}
-  #chart-panel {{ background: #111; border: 1px solid #222; border-radius: 6px;
+  .chart-panel {{ background: #111; border: 1px solid #222; border-radius: 6px;
                   padding: 16px; margin-bottom: 16px; }}
-  #chart-label {{ display: flex; justify-content: space-between; align-items: center;
+  .chart-label {{ display: flex; justify-content: space-between; align-items: center;
                   font-size: 10px; color: #444; text-transform: uppercase;
                   letter-spacing: 1px; margin-bottom: 12px; }}
   #hide-neg-label {{ display: flex; align-items: center; gap: 5px; cursor: pointer;
                      font-size: 10px; color: #555; text-transform: uppercase;
                      letter-spacing: 0.5px; }}
   #hide-neg {{ cursor: pointer; accent-color: #4fc3f7; }}
-  #chart-container {{ position: relative; height: 300px; }}
+  .chart-container {{ position: relative; height: 300px; }}
   .legend {{ display: flex; gap: 16px; margin-top: 10px; }}
   .legend-item {{ display: flex; align-items: center; gap: 6px; font-size: 10px; color: #555; }}
   .legend-dot {{ width: 10px; height: 10px; border-radius: 2px; }}
@@ -93,20 +93,29 @@ def generate_html(runs):
   .metric-val.pos {{ color: #4fc3f7; }}
   .metric-val.neg {{ color: #ef5350; }}
   .metric-val.neutral {{ color: #888; }}
+  .metric-val.warn {{ color: #ff9800; }}
   .metric-label {{ font-size: 9px; color: #444; text-transform: uppercase;
                    letter-spacing: 0.5px; margin-top: 3px; }}
   #symbols-section {{ display: none; }}
-  #symbols-title {{ font-size: 10px; color: #444; text-transform: uppercase;
-                    letter-spacing: 1px; margin-bottom: 10px; }}
+  .symbols-header {{ display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }}
+  .metric-tabs {{ display: flex; gap: 2px; }}
+  .metric-tab {{ padding: 3px 10px; border-radius: 3px; font-size: 9px;
+                 text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
+                 background: #0d0d0d; color: #444; border: none; font-family: inherit;
+                 transition: all 0.15s; }}
+  .metric-tab:hover {{ color: #888; }}
+  .metric-tab.active {{ background: #1a1a2e; color: #e0e0ff; }}
   .symbol-row {{ display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }}
   .symbol-name {{ font-size: 10px; color: #555; width: 80px; flex-shrink: 0; }}
   .symbol-bar-bg {{ flex: 1; height: 12px; background: #0d0d0d; border-radius: 2px; overflow: hidden; }}
   .symbol-bar-fill {{ height: 100%; border-radius: 2px; transition: width 0.2s; }}
   .symbol-bar-fill.pos {{ background: #4fc3f7; }}
   .symbol-bar-fill.neg {{ background: #ef5350; }}
-  .symbol-val {{ font-size: 10px; width: 44px; text-align: right; }}
+  .symbol-bar-fill.warn {{ background: #ff9800; }}
+  .symbol-val {{ font-size: 10px; width: 52px; text-align: right; }}
   .symbol-val.pos {{ color: #4fc3f7; }}
   .symbol-val.neg {{ color: #ef5350; }}
+  .symbol-val.warn {{ color: #ff9800; }}
 </style>
 </head>
 <body>
@@ -116,16 +125,28 @@ def generate_html(runs):
   <span class="meta" id="header-meta"></span>
 </div>
 
-<div id="chart-panel">
-  <div id="chart-label">
+<div class="chart-panel" id="sharpe-panel">
+  <div class="chart-label">
     <span>mean_sharpe by iteration — click a bar to inspect</span>
     <label id="hide-neg-label">
       <input type="checkbox" id="hide-neg" checked> hide negative sharpe
     </label>
   </div>
-  <div id="chart-container"><canvas id="chart"></canvas></div>
+  <div class="chart-container"><canvas id="chart"></canvas></div>
   <div class="legend">
     <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7"></div>keep</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3a3a3a"></div>discard</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#b71c1c"></div>crash</div>
+  </div>
+</div>
+
+<div class="chart-panel" id="dd-panel">
+  <div class="chart-label">
+    <span>mean_max_drawdown by iteration — click a bar to inspect</span>
+  </div>
+  <div class="chart-container" style="height:200px"><canvas id="dd-chart"></canvas></div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#ff9800"></div>keep</div>
     <div class="legend-item"><div class="legend-dot" style="background:#3a3a3a"></div>discard</div>
     <div class="legend-item"><div class="legend-dot" style="background:#b71c1c"></div>crash</div>
   </div>
@@ -153,24 +174,40 @@ def generate_html(runs):
     </div>
   </div>
   <div id="symbols-section">
-    <div id="symbols-title">per-symbol sharpe ratio</div>
+    <div class="symbols-header">
+      <div class="metric-tabs">
+        <button class="metric-tab active" data-metric="sharpe">sharpe</button>
+        <button class="metric-tab" data-metric="dd">drawdown</button>
+        <button class="metric-tab" data-metric="return">return</button>
+      </div>
+    </div>
     <div id="symbols-list"></div>
   </div>
 </div>
 
 <script>
 const RUNS = {runs_json};
+let activeMetric = 'sharpe';
+let selectedRun = null;
 
 // Header meta
 const total = RUNS.length;
 const best = Math.max(...RUNS.map(r => r.mean_sharpe));
+const bestDD = Math.max(...RUNS.map(r => r.mean_max_dd));
 document.getElementById('header-meta').textContent =
-  total + ' runs · best sharpe: ' + best.toFixed(4);
+  total + ' runs · best sharpe: ' + best.toFixed(4) + ' · best dd: ' + bestDD.toFixed(2);
 
-// Chart data
+// Shared chart data
 const labels = RUNS.map((r, i) => r.tag || ('#' + (i + 1)));
-const barColors = RUNS.map(r =>
+const statusColor = (keep, crash) =>
+  status === 'keep' ? keep : (status === 'crash' ? crash : '#3a3a3a');
+
+const sharpeColors = RUNS.map(r =>
   r.status === 'keep' ? '#4fc3f7' :
+  r.status === 'crash' ? '#b71c1c' : '#3a3a3a'
+);
+const ddColors = RUNS.map(r =>
+  r.status === 'keep' ? '#ff9800' :
   r.status === 'crash' ? '#b71c1c' : '#3a3a3a'
 );
 
@@ -189,11 +226,16 @@ function getLineData() {{
   return RUNS.map(r => (r.status === 'keep' && (!hideNeg.checked || r.mean_sharpe >= 0)) ? compressSharpe(r.mean_sharpe) : null);
 }}
 
+function getDDBarData() {{
+  return RUNS.map(r => r.mean_max_dd);
+}}
+
 // Zero reference line plugin
 Chart.register({{
   id: 'zeroline',
   afterDraw(chart) {{
     const y0 = chart.scales.y.getPixelForValue(0);
+    if (y0 < chart.chartArea.top || y0 > chart.chartArea.bottom) return;
     const ctx = chart.ctx;
     ctx.save();
     ctx.beginPath();
@@ -207,8 +249,24 @@ Chart.register({{
   }}
 }});
 
-const ctx = document.getElementById('chart').getContext('2d');
-const chart = new Chart(ctx, {{
+// Shared click handler
+function handleBarClick(chartInstance, elements) {{
+  if (!elements.length) return;
+  const idx = elements[0].index;
+  if (idx === selectedIndex) {{
+    selectedIndex = null;
+    selectedRun = null;
+    document.getElementById('detail-panel').style.display = 'none';
+  }} else {{
+    selectedIndex = idx;
+    selectedRun = RUNS[idx];
+    renderDetail(selectedRun);
+  }}
+}}
+
+// --- Sharpe chart ---
+const sharpeCtx = document.getElementById('chart').getContext('2d');
+const sharpeChart = new Chart(sharpeCtx, {{
   data: {{
     labels,
     datasets: [
@@ -216,7 +274,7 @@ const chart = new Chart(ctx, {{
         type: 'bar',
         label: 'mean_sharpe',
         data: getBarData(),
-        backgroundColor: barColors,
+        backgroundColor: sharpeColors,
         borderWidth: 0,
         borderRadius: 2,
       }},
@@ -236,17 +294,7 @@ const chart = new Chart(ctx, {{
   options: {{
     responsive: true,
     maintainAspectRatio: false,
-    onClick: (e, elements) => {{
-      if (!elements.length) return;
-      const idx = elements[0].index;
-      if (idx === selectedIndex) {{
-        selectedIndex = null;
-        document.getElementById('detail-panel').style.display = 'none';
-      }} else {{
-        selectedIndex = idx;
-        renderDetail(RUNS[idx]);
-      }}
-    }},
+    onClick: (e, elements) => handleBarClick(sharpeChart, elements),
     plugins: {{
       legend: {{ display: false }},
       tooltip: {{
@@ -290,11 +338,107 @@ const chart = new Chart(ctx, {{
   }}
 }});
 
-hideNeg.addEventListener('change', () => {{
-  chart.data.datasets[0].data = getBarData();
-  chart.data.datasets[1].data = getLineData();
-  chart.update();
+// --- Drawdown chart ---
+const ddCtx = document.getElementById('dd-chart').getContext('2d');
+const ddChart = new Chart(ddCtx, {{
+  type: 'bar',
+  data: {{
+    labels,
+    datasets: [{{
+      label: 'mean_max_dd',
+      data: getDDBarData(),
+      backgroundColor: ddColors,
+      borderWidth: 0,
+      borderRadius: 2,
+    }}]
+  }},
+  options: {{
+    responsive: true,
+    maintainAspectRatio: false,
+    onClick: (e, elements) => handleBarClick(ddChart, elements),
+    plugins: {{
+      legend: {{ display: false }},
+      tooltip: {{
+        callbacks: {{
+          title: (items) => labels[items[0].dataIndex],
+          label: (item) => {{
+            const r = RUNS[item.dataIndex];
+            const desc = r.description.length > 60
+              ? r.description.slice(0, 57) + '...'
+              : r.description;
+            return ['max dd: ' + r.mean_max_dd.toFixed(2) + '%', desc];
+          }}
+        }},
+        backgroundColor: '#1a1a2e',
+        titleColor: '#e0e0ff',
+        bodyColor: '#888',
+        borderColor: '#333',
+        borderWidth: 1,
+        padding: 10,
+      }}
+    }},
+    scales: {{
+      x: {{
+        grid: {{ display: false }},
+        ticks: {{ color: '#444', maxRotation: 60, font: {{ size: 9 }} }}
+      }},
+      y: {{
+        grid: {{ color: '#1a1a1a' }},
+        ticks: {{ color: '#555', font: {{ size: 10 }}, callback: v => v.toFixed(1) + '%' }},
+        border: {{ dash: [2, 2] }}
+      }}
+    }}
+  }}
 }});
+
+hideNeg.addEventListener('change', () => {{
+  sharpeChart.data.datasets[0].data = getBarData();
+  sharpeChart.data.datasets[1].data = getLineData();
+  sharpeChart.update();
+}});
+
+// --- Metric tab switching ---
+document.querySelectorAll('.metric-tab').forEach(tab => {{
+  tab.addEventListener('click', () => {{
+    document.querySelectorAll('.metric-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    activeMetric = tab.dataset.metric;
+    if (selectedRun) renderSymbolBars(selectedRun);
+  }});
+}});
+
+function renderSymbolBars(run) {{
+  const symbolsList = document.getElementById('symbols-list');
+  symbolsList.innerHTML = '';
+
+  if (!run.symbols || Object.keys(run.symbols).length === 0) return;
+
+  const metricKey = activeMetric === 'sharpe' ? 'sharpe_ratio' :
+                    activeMetric === 'dd' ? 'max_drawdown_pct' : 'total_return_pct';
+
+  const entries = Object.entries(run.symbols)
+    .map(([sym, d]) => [sym, d[metricKey] ?? 0])
+    .sort((a, b) => b[1] - a[1]);
+
+  const maxAbs = Math.max(...entries.map(([, v]) => Math.abs(v)), 0.001);
+  const cssClass = activeMetric === 'dd' ? 'warn' : '';
+
+  entries.forEach(([sym, val]) => {{
+    const pct = Math.abs(val) / maxAbs * 100;
+    const isPos = val >= 0;
+    const cls = cssClass || (isPos ? 'pos' : 'neg');
+    const row = document.createElement('div');
+    row.className = 'symbol-row';
+    row.innerHTML = `
+      <span class="symbol-name">${{sym}}</span>
+      <div class="symbol-bar-bg">
+        <div class="symbol-bar-fill ${{cls}}" style="width:${{pct.toFixed(1)}}%"></div>
+      </div>
+      <span class="symbol-val ${{cls}}">${{val.toFixed(2)}}</span>
+    `;
+    symbolsList.appendChild(row);
+  }});
+}}
 
 function renderDetail(run) {{
   document.getElementById('detail-panel').style.display = 'block';
@@ -312,8 +456,8 @@ function renderDetail(run) {{
   sharpeEl.className = 'metric-val ' + (run.mean_sharpe >= 0 ? 'pos' : 'neg');
 
   const ddEl = document.getElementById('m-dd');
-  ddEl.textContent = run.mean_max_dd.toFixed(2);
-  ddEl.className = 'metric-val neg';
+  ddEl.textContent = run.mean_max_dd.toFixed(2) + '%';
+  ddEl.className = 'metric-val warn';
 
   const retEl = document.getElementById('m-return');
   if (run.mean_total_return !== null && run.mean_total_return !== undefined) {{
@@ -325,31 +469,9 @@ function renderDetail(run) {{
   }}
 
   const symbolsSection = document.getElementById('symbols-section');
-  const symbolsList = document.getElementById('symbols-list');
-  symbolsList.innerHTML = '';
-
   if (run.symbols && Object.keys(run.symbols).length > 0) {{
     symbolsSection.style.display = 'block';
-    const entries = Object.entries(run.symbols)
-      .map(([sym, d]) => [sym, d.sharpe_ratio])
-      .sort((a, b) => b[1] - a[1]);
-
-    const maxAbs = Math.max(...entries.map(([, v]) => Math.abs(v)), 0.001);
-
-    entries.forEach(([sym, sharpe]) => {{
-      const pct = Math.abs(sharpe) / maxAbs * 100;
-      const isPos = sharpe >= 0;
-      const row = document.createElement('div');
-      row.className = 'symbol-row';
-      row.innerHTML = `
-        <span class="symbol-name">${{sym}}</span>
-        <div class="symbol-bar-bg">
-          <div class="symbol-bar-fill ${{isPos ? 'pos' : 'neg'}}" style="width:${{pct.toFixed(1)}}%"></div>
-        </div>
-        <span class="symbol-val ${{isPos ? 'pos' : 'neg'}}">${{sharpe.toFixed(2)}}</span>
-      `;
-      symbolsList.appendChild(row);
-    }});
+    renderSymbolBars(run);
   }} else {{
     symbolsSection.style.display = 'none';
   }}
