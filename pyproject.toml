@@ -1,0 +1,29 @@
+[project]
+name = "orb-autoresearch"
+version = "0.1.0"
+description = "Autonomous overnight research loop for ORB trading strategy optimization"
+requires-python = ">=3.10"
+
+dependencies = [
+    "yfinance>=0.2.40",
+    "backtesting>=0.3.3",
+    "pandas>=2.0",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+    "pyarrow>=14.0",      # for parquet support
+    "scipy>=1.12",
+]
+
+[tool.uv]
+dev-dependencies = [
+    "jupyter>=1.0",
+    "notebook>=7.0",
+]
+
+[tool.hatch.build.targets.wheel]
+sources = ["."]
+include = ["*.py"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

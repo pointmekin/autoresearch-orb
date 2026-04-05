@@ -1,0 +1,191 @@
+# ORB Autoresearch
+
+This is an autonomous experiment loop for optimizing Opening Range Breakout (ORB) trading strategies across multiple forex pairs and CFDs using backtesting.py and Yahoo Finance data.
+
+It is modeled after karpathy/autoresearch: you modify `strategy.py`, run the backtest, keep improvements, discard regressions, and loop indefinitely while the human sleeps.
+
+---
+
+## Setup
+
+To begin a new research run, work with the user to:
+
+1. **Agree on a run tag**: propose a tag based on today's date (e.g. `apr5`). The branch `autoresearch/<tag>` must not already exist.
+2. **Create the branch**: `git checkout -b autoresearch/<tag>` from current master.
+3. **Read the in-scope files**: Read these files in full before experimenting:
+   - `README.md` — project overview and quick-start
+   - `prepare.py` — fixed constants, data download, evaluation metrics. **Do not modify.**
+   - `strategy.py` — the ORB strategy file. **This is the only file you modify.**
+4. **Verify data exists**: Check that the `data/` directory contains `.parquet` files. If not, tell the human to run `python prepare.py` first.
+5. **Initialize results.tsv**: Create `results.tsv` with just the header row (see format below).
+6. **Confirm and go**.
+
+---
+
+## Experimentation
+
+Each experiment runs the backtest across **all symbols** (`ALL_SYMBOLS` in `prepare.py`).
+
+**What you CAN do (all fair game in `strategy.py`):**
+- Change any value in the `PARAMS` dict
+- Rewrite the `ORBStrategy.next()` logic entirely
+- Add new indicators using `self.I()` (backtesting.py's indicator helper)
+- Add time-of-day filters, session filters, day-of-week filters
+- Change position sizing logic
+- Change stop loss and take profit calculation methods
+- Add trailing stops
+- Try alternative entry triggers (e.g. volume confirmation, momentum filters)
+- Change the `run_experiment()` function (e.g. to add per-symbol optimization)
+
+**What you CANNOT do:**
+- Modify `prepare.py` — it is read-only infrastructure
+- Change `ALL_SYMBOLS`, `BACKTEST_START`, `BACKTEST_END`, `INTRADAY_INTERVAL` (defined in prepare.py)
+- Use data sources other than what `prepare.py` loads
+- Install new packages
+
+**The goal: MAXIMIZE `mean_sharpe` across all symbols on in-sample training data.**
+
+We optimize for robustness across the whole portfolio, not for a single pair. A strategy that scores 1.2 on 13 symbols beats one that scores 2.5 on 3 symbols and -0.3 on the rest.
+
+**Secondary objectives** (tiebreakers):
+1. Lower `mean_max_drawdown` (less negative is better)
+2. Higher `mean_total_return`
+3. Reasonable `num_trades` (strategies with <5 trades per symbol are suspect — may be overfitting)
+
+---
+
+## Running an Experiment
+
+```bash
+python strategy.py --tag <tag> > logs/<tag>.log 2>&1
+```
+
+Extract the key metrics:
+```bash
+grep "mean_sharpe\|median_sharpe\|mean_max_drawdown\|mean_total_return" logs/<tag>.log
+```
+
+Or read the full summary:
+```bash
+tail -n 40 logs/<tag>.log
+```
+
+If the script crashes, check:
+```bash
+tail -n 60 logs/<tag>.log
+```
+
+---
+
+## Reading Results
+
+Results are saved as JSON to `results/<tag>.json`. The "aggregate" section has the headline numbers:
+```json
+{
+  "aggregate": {
+    "mean_sharpe": 0.82,
+    "median_sharpe": 0.74,
+    "mean_max_drawdown": -18.4,
+    "mean_total_return": 34.2,
+    "num_symbols": 15
+  }
+}
+```
+
+---
+
+## Logging Results
+
+Log all runs to `results.tsv` (tab-separated, NOT comma-separated — commas break in descriptions).
+
+**Format:**
+```
+commit\tmean_sharpe\tmean_max_dd\tstatus\tdescription
+```
+
+Columns:
+1. git commit hash (short, 7 chars)
+2. mean_sharpe across all symbols (e.g. `0.8234`)
+3. mean_max_drawdown (e.g. `-18.4`)
+4. status: `keep`, `discard`, or `crash`
+5. short description of what this experiment tried
+
+**Example:**
+```
+commit	mean_sharpe	mean_max_dd	status	description
+a1b2c3d	0.4521	-22.3	keep	baseline ORB 2-bar range
+b2c3d4e	0.5103	-19.8	keep	reduce SL to 0.3x range
+c3d4e5f	0.3812	-28.1	discard	increase breakout threshold to 0.003
+d4e5f6g	0.0000	0.0	crash	vectorized ORB (bug in indicator)
+e5f6g7h	0.6441	-17.2	keep	add Mon-Thu filter only
+```
+
+Do NOT commit `results.tsv` — leave it untracked by git.
+
+---
+
+## The Experiment Loop
+
+**LOOP FOREVER:**
+
+1. Look at git state: current branch and HEAD commit
+2. Think about what to change in `strategy.py` (see Ideas section below)
+3. Edit `strategy.py` directly
+4. `git add strategy.py && git commit -m "experiment: <short description>"`
+5. Run experiment: `python strategy.py --tag <tagNNN> > logs/<tagNNN>.log 2>&1`
+6. Extract metrics: `grep "mean_sharpe\|mean_max_drawdown\|mean_total_return" logs/<tagNNN>.log`
+7. If empty output → crash. Run `tail -n 60 logs/<tagNNN>.log` to debug. Fix if trivial, skip if not.
+8. Log result to `results.tsv`
+9. If `mean_sharpe` improved → **advance** (keep commit, this is the new baseline)
+10. If `mean_sharpe` is equal or worse → `git reset HEAD~1` to discard, revert changes
+
+Commit only the working experiments. The TSV captures the full history including discards.
+
+**Timeouts:** A full run across all 15 symbols should complete in under 10 minutes. If a run exceeds 15 minutes, kill it and treat as a crash.
+
+**Crashes:** If trivially fixable (typo, wrong column name), fix and rerun. If the idea is broken, log "crash" and move on.
+
+**NEVER STOP:** Once the loop begins, do NOT pause to ask the human if you should continue. The human is sleeping. You are autonomous. If you run out of ideas, read the Ideas section below, try combinations of past near-misses, or try more radical changes. Loop until manually interrupted.
+
+---
+
+## Ideas to Explore
+
+When you feel stuck, consult this list. You are also encouraged to generate your own hypotheses.
+
+**Parameter tuning:**
+- Range window: 1 bar (1h), 2 bars, 3 bars, 4 bars — which is most robust?
+- Breakout threshold: 0 (any breakout), 0.1%, 0.2%, 0.5%
+- SL/TP ratios: asymmetric? (different multipliers per instrument class?)
+- Max trades per day: 1 vs 2 vs unlimited
+
+**Entry filters:**
+- Volume confirmation: only trade if volume on breakout bar > N-period average
+- Momentum filter: only go long if price > 20-bar SMA
+- Volatility filter: skip if ATR is too low (dead market) or too high (chaotic)
+- Time filter: only enter in first 4 hours of session, not in last 2
+
+**Exit rules:**
+- Trailing stop: activate after price moves X% in our favor
+- Time-based exit: close trade if still open after N hours
+- Re-entry: allow re-entry after stopped out if breakout continues
+
+**Session logic:**
+- Only trade certain days of the week (e.g., Tue–Thu tend to trend better)
+- Different parameters per instrument class (forex vs equity ETFs vs commodities)
+
+**Structure changes:**
+- Per-symbol parameter optimization using backtesting.py's built-in optimizer
+- Separate parameter sets for "trending" vs "ranging" market regimes (use ATR ratio as proxy)
+
+---
+
+## Simplicity Criterion
+
+All else being equal, simpler is better. A strategy with 2 parameters that achieves 0.72 mean Sharpe beats one with 8 parameters that achieves 0.74. Prefer clean, legible code. Removing complexity and getting the same result is a win.
+
+---
+
+## Footer
+
+*Modeled after karpathy/autoresearch. The agent runs overnight. The human wakes to results.*
