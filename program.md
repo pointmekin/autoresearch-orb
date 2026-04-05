@@ -123,24 +123,25 @@ Log all runs to `results.tsv` (tab-separated, NOT comma-separated — commas bre
 
 **Format:**
 ```
-commit\tmean_sharpe\tmean_max_dd\tstatus\tdescription
+tag\tcommit\tmean_sharpe\tmean_max_dd\tstatus\tdescription
 ```
 
 Columns:
-1. git commit hash (short, 7 chars)
-2. mean_sharpe across all symbols (e.g. `0.8234`)
-3. mean_max_drawdown (e.g. `-18.4`)
-4. status: `keep`, `discard`, or `crash`
-5. short description of what this experiment tried
+1. tag — the same tag used for `--tag` in the run command (e.g. `apr5_001`)
+2. git commit hash (short, 7 chars)
+3. mean_sharpe across all symbols (e.g. `0.8234`)
+4. mean_max_drawdown (e.g. `-18.4`)
+5. status: `keep`, `discard`, or `crash`
+6. short description of what this experiment tried
 
 **Example:**
 ```
-commit	mean_sharpe	mean_max_dd	status	description
-a1b2c3d	0.4521	-22.3	keep	baseline ORB 2-bar range
-b2c3d4e	0.5103	-19.8	keep	reduce SL to 0.3x range
-c3d4e5f	0.3812	-28.1	discard	increase breakout threshold to 0.003
-d4e5f6g	0.0000	0.0	crash	vectorized ORB (bug in indicator)
-e5f6g7h	0.6441	-17.2	keep	add Mon-Thu filter only
+tag	commit	mean_sharpe	mean_max_dd	status	description
+apr5_001	a1b2c3d	0.4521	-22.3	keep	baseline ORB 2-bar range
+apr5_002	b2c3d4e	0.5103	-19.8	keep	reduce SL to 0.3x range
+apr5_003	c3d4e5f	0.3812	-28.1	discard	increase breakout threshold to 0.003
+apr5_004	d4e5f6g	0.0000	0.0	crash	vectorized ORB (bug in indicator)
+apr5_005	e5f6g7h	0.6441	-17.2	keep	add Mon-Thu filter only
 ```
 
 Do NOT commit `results.tsv` — leave it untracked by git.
@@ -159,7 +160,7 @@ Do NOT commit `results.tsv` — leave it untracked by git.
 6. Extract metrics: `grep "mean_sharpe\|mean_max_drawdown\|mean_total_return" logs/<prefix>_NNN.log`
 7. If empty output → crash. Run `tail -n 60 logs/<prefix>_NNN.log` to debug. Fix if trivial, skip if not.
 8. **Stage and amend the commit to include the log and results**: `git add logs/<prefix>_NNN.log results/<prefix>_NNN.json && git commit --amend --no-edit`
-9. Log result to `results.tsv`
+9. Log result to `results.tsv`: `<tag>\t<commit>\t<mean_sharpe>\t<mean_max_dd>\t<status>\t<description>`
 10. If `mean_sharpe` improved → **advance** (keep commit, this is the new baseline)
 11. If `mean_sharpe` is equal or worse → `git reset HEAD~1` to discard, revert changes
 
