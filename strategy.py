@@ -168,6 +168,11 @@ class ORBStrategy(Strategy):
         if self.max_trades_per_session > 0 and self._trades_this_session >= self.max_trades_per_session:
             return
 
+        # ── Time filter: only trade within 2 hours (24 bars) after range forms ──
+        bars_since_range = bars_into_session - self.opening_range_bars
+        if bars_since_range > 24:
+            return
+
         # ── Entry signals ─────────────────────────────────────────────────
         close     = self.data.Close[-1]
         sl_dist   = range_height * self.stop_loss_range_multiple
