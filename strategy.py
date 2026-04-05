@@ -42,11 +42,11 @@ PARAMS = {
     # The first N bars after session open are observation-only; trade starts after.
     "opening_range_bars": 3,
 
-    # Breakout threshold: 0.001 = 0.1%
-    "breakout_threshold": 0.001,
+    # Breakout threshold: 0 = trade any breakout
+    "breakout_threshold": 0.0,
 
     # Stop loss as fraction of the opening range height.
-    "stop_loss_range_multiple": 0.5,
+    "stop_loss_range_multiple": 1.0,
 
     # Take profit as fraction of the opening range height.
     "take_profit_range_multiple": 2.0,
@@ -54,8 +54,8 @@ PARAMS = {
     # Maximum number of trades per session per symbol (0 = unlimited)
     "max_trades_per_session": 1,
 
-    # Minimum range height as fraction of price (skip quiet/flat sessions).
-    "min_range_pct": 0.001,
+    # Minimum range height as fraction of price (0 = no filter).
+    "min_range_pct": 0.0,
 
     # Close all positions at session end (True = no overnight holds)
     "close_at_session_end": True,
