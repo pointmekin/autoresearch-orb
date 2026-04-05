@@ -38,21 +38,18 @@ from prepare import (
 # ─── Strategy Parameters (agent modifies these) ──────────────────────────────
 
 PARAMS = {
-    # Opening range duration (bars). With 1h bars: 1 bar = 1 hour.
-    # e.g., opening_range_bars=2 means the first 2 hours define the range.
-    "opening_range_bars": 3,
+    # Opening range duration (bars). With 5m bars: 6 bars = 30 minutes.
+    "opening_range_bars": 6,
 
     # Breakout threshold: how far price must exceed the range high/low to trigger entry.
-    # 0.0 = any breakout, 0.001 = 0.1% above range high.
-    "breakout_threshold": 0.002,
+    # 0.001 = 0.1% (tighter threshold suits 5m precision)
+    "breakout_threshold": 0.001,
 
     # Stop loss as fraction of the opening range height.
-    # e.g., 0.5 means stop = entry ± 50% of (range_high - range_low)
     "stop_loss_range_multiple": 0.5,
 
     # Take profit as fraction of the opening range height.
-    # e.g., 1.5 means TP = entry ± 150% of range height
-    "take_profit_range_multiple": 2.0,
+    "take_profit_range_multiple": 1.5,
 
     # Maximum number of trades per day per symbol (0 = unlimited)
     "max_trades_per_day": 1,
@@ -60,17 +57,15 @@ PARAMS = {
     # Close all positions at end of session (True = no overnight holds)
     "close_at_session_end": True,
 
+    # Session start hour (UTC). Range builds from first N bars at/after this hour.
+    # 8 = London open (forex). Equity ETFs (SPY/QQQ) naturally start at 14:30 UTC.
+    "session_start_hour_utc": 8,
+
     # Session end hour (UTC). Trades are closed after this hour.
-    # For forex: 21 UTC. For US equities: 21 UTC (4pm ET).
     "session_end_hour_utc": 21,
 
     # Day-of-week filter: list of allowed weekdays (0=Mon, 4=Fri, 5=Sat, 6=Sun)
-    # Exclude weekends and low-liquidity days
     "allowed_weekdays": [0, 1, 2, 3, 4],  # Mon–Fri
-
-    # Trailing stop activation: fraction of TP distance at which trailing stop activates.
-    # 0.0 = disabled
-    "trailing_stop_activation": 0.0,
 }
 
 # ─── ORB Strategy Class ───────────────────────────────────────────────────────
@@ -94,28 +89,35 @@ class ORBStrategy(Strategy):
     take_profit_range_multiple = PARAMS["take_profit_range_multiple"]
     max_trades_per_day        = PARAMS["max_trades_per_day"]
     close_at_session_end      = PARAMS["close_at_session_end"]
+    session_start_hour_utc    = PARAMS["session_start_hour_utc"]
     session_end_hour_utc      = PARAMS["session_end_hour_utc"]
 
     def init(self):
         self._range_high = None
         self._range_low  = None
-        self._current_day = None
+        self._current_session = None
         self._trades_today = 0
         self._range_set = False
 
     def next(self):
         current_time = self.data.index[-1]
-        current_day  = current_time.date()
         current_hour = current_time.hour
 
-        # ── New day: reset state ───────────────────────────────────────────
-        if current_day != self._current_day:
-            self._current_day  = current_day
+        # ── Session boundary: shifts "day" to start at session_start_hour_utc ─
+        session_day = (current_time - pd.Timedelta(hours=self.session_start_hour_utc)).date()
+
+        # ── New session: reset state ──────────────────────────────────────
+        if session_day != self._current_session:
+            self._current_session = session_day
             self._trades_today = 0
             self._range_set    = False
             self._range_high   = None
             self._range_low    = None
-            self._day_open_bar = len(self.data) - 1  # index of first bar today
+            self._day_open_bar = len(self.data) - 1
+
+        # ── Before session start: skip ────────────────────────────────────
+        if current_hour < self.session_start_hour_utc:
+            return
 
         # ── Session end: close everything ─────────────────────────────────
         if self.close_at_session_end and current_hour >= self.session_end_hour_utc:
@@ -128,12 +130,12 @@ class ORBStrategy(Strategy):
             return
 
         # ── Build opening range ────────────────────────────────────────────
-        bars_into_day = len(self.data) - 1 - self._day_open_bar
+        bars_into_session = len(self.data) - 1 - self._day_open_bar
 
         if not self._range_set:
-            if bars_into_day < self.opening_range_bars:
+            if bars_into_session < self.opening_range_bars:
                 return  # Still in range-formation window
-            # Range is now complete
+            # Range is now complete — use first N bars of the session
             range_slice_high = self.data.High[-self.opening_range_bars - 1 : -1]
             range_slice_low  = self.data.Low[-self.opening_range_bars - 1 : -1]
             self._range_high = max(range_slice_high)
@@ -151,7 +153,7 @@ class ORBStrategy(Strategy):
         if self.max_trades_per_day > 0 and self._trades_today >= self.max_trades_per_day:
             return
 
-        # ── Entry signals ─────────────────────────────────────────────────
+        # ── Entry signals (breakout direction) ───────────────────────────
         close = self.data.Close[-1]
         sl_dist = range_height * self.stop_loss_range_multiple
         tp_dist = range_height * self.take_profit_range_multiple
@@ -219,6 +221,7 @@ def run_experiment(tag: str, params: dict = None, optimize: bool = False):
         ORBStrategy.take_profit_range_multiple = params["take_profit_range_multiple"]
         ORBStrategy.max_trades_per_day         = params["max_trades_per_day"]
         ORBStrategy.close_at_session_end       = params["close_at_session_end"]
+        ORBStrategy.session_start_hour_utc     = params["session_start_hour_utc"]
         ORBStrategy.session_end_hour_utc       = params["session_end_hour_utc"]
 
         try:
