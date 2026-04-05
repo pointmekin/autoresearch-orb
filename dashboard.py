@@ -167,6 +167,24 @@ const lineData = RUNS.map(r => r.status === 'keep' ? r.mean_sharpe : null);
 
 let selectedIndex = null;
 
+// Zero reference line plugin
+Chart.register({{
+  id: 'zeroline',
+  afterDraw(chart) {{
+    const y0 = chart.scales.y.getPixelForValue(0);
+    const ctx = chart.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.setLineDash([4, 4]);
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 1;
+    ctx.moveTo(chart.chartArea.left, y0);
+    ctx.lineTo(chart.chartArea.right, y0);
+    ctx.stroke();
+    ctx.restore();
+  }}
+}});
+
 const ctx = document.getElementById('chart').getContext('2d');
 const chart = new Chart(ctx, {{
   data: {{
@@ -188,7 +206,7 @@ const chart = new Chart(ctx, {{
         borderWidth: 1.5,
         pointRadius: 0,
         fill: false,
-        spanGaps: false,
+        spanGaps: true,
         tension: 0,
       }}
     ]
@@ -240,24 +258,6 @@ const chart = new Chart(ctx, {{
         border: {{ dash: [2, 2] }}
       }}
     }}
-  }}
-}});
-
-// Zero reference line plugin
-Chart.register({{
-  id: 'zeroline',
-  afterDraw(chart) {{
-    const y0 = chart.scales.y.getPixelForValue(0);
-    const ctx = chart.ctx;
-    ctx.save();
-    ctx.beginPath();
-    ctx.setLineDash([4, 4]);
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 1;
-    ctx.moveTo(chart.chartArea.left, y0);
-    ctx.lineTo(chart.chartArea.right, y0);
-    ctx.stroke();
-    ctx.restore();
   }}
 }});
 
@@ -325,7 +325,31 @@ function renderDetail(run) {{
 
 
 def main():
-    pass
+    """Generate dashboard.html from results.tsv + results/*.json and open it."""
+    script_dir = pathlib.Path(__file__).parent
+    tsv_path = script_dir / 'results.tsv'
+    results_dir = script_dir / 'results'
+    output_path = script_dir / 'dashboard.html'
+
+    if not tsv_path.exists():
+        print(f"Error: {tsv_path} not found. Run some experiments first.")
+        return
+
+    runs = parse_tsv(str(tsv_path))
+
+    for run in runs:
+        sym_data = load_symbol_data(run['tag'], str(results_dir))
+        if sym_data:
+            run['mean_total_return'] = sym_data['mean_total_return']
+            run['symbols'] = sym_data['symbols']
+        else:
+            run['mean_total_return'] = None
+            run['symbols'] = None
+
+    html = generate_html(runs)
+    output_path.write_text(html, encoding='utf-8')
+    print(f"Dashboard written to {output_path}")
+    webbrowser.open(output_path.as_uri())
 
 
 if __name__ == '__main__':
