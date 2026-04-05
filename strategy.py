@@ -52,7 +52,7 @@ PARAMS = {
     "take_profit_range_multiple": 1.0,
 
     # Maximum number of trades per session per symbol (0 = unlimited)
-    "max_trades_per_session": 2,
+    "max_trades_per_session": 1,
 
     # Minimum range height as fraction of price (0 = no filter).
     "min_range_pct": 0.0,
