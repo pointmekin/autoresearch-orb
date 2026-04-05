@@ -38,9 +38,9 @@ from prepare import (
 # ─── Strategy Parameters (agent modifies these) ──────────────────────────────
 
 PARAMS = {
-    # Opening range duration (bars). With 5m bars: 3 bars = 15 minutes.
+    # Opening range duration (bars). With 5m bars: 6 bars = 30 minutes.
     # The first N bars after session open are observation-only; trade starts after.
-    "opening_range_bars": 3,
+    "opening_range_bars": 6,
 
     # Breakout threshold: 0 = trade any breakout
     "breakout_threshold": 0.0,
