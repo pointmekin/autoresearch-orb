@@ -5,7 +5,7 @@ import tempfile
 import unittest
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(__file__)))
-from dashboard import parse_tsv, load_symbol_data
+from dashboard import parse_tsv, load_symbol_data, generate_html
 
 
 class TestParseTsv(unittest.TestCase):
@@ -101,3 +101,38 @@ class TestLoadSymbolData(unittest.TestCase):
         self.assertAlmostEqual(result['mean_total_return'], 3.45)
         self.assertIn('EURUSD=X', result['symbols'])
         self.assertAlmostEqual(result['symbols']['EURUSD=X']['sharpe_ratio'], 2.1)
+
+
+class TestGenerateHtml(unittest.TestCase):
+
+    def _make_run(self, tag, sharpe, status):
+        return {
+            'tag': tag,
+            'commit': 'abc1234',
+            'mean_sharpe': sharpe,
+            'mean_max_dd': -0.5,
+            'status': status,
+            'description': 'test run',
+            'mean_total_return': None,
+            'symbols': None,
+        }
+
+    def test_returns_html_string(self):
+        runs = [self._make_run('apr5_001', 1.5, 'keep')]
+        html = generate_html(runs)
+        self.assertIsInstance(html, str)
+        self.assertTrue(html.startswith('<!DOCTYPE html>'))
+
+    def test_embeds_run_data(self):
+        runs = [self._make_run('apr5_001', 1.5, 'keep')]
+        html = generate_html(runs)
+        self.assertIn('apr5_001', html)
+        self.assertIn('chart.js', html.lower())
+
+    def test_embeds_multiple_runs(self):
+        runs = [
+            self._make_run('apr5_001', 1.5, 'keep'),
+            self._make_run('apr5_002', 0.8, 'discard'),
+        ]
+        html = generate_html(runs)
+        self.assertIn('apr5_002', html)
