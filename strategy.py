@@ -42,8 +42,8 @@ PARAMS = {
     # The first N bars after session open are observation-only; trade starts after.
     "opening_range_bars": 6,
 
-    # Breakout threshold: 0 = trade any breakout
-    "breakout_threshold": 0.0,
+    # Breakout threshold: 0.001 = 0.1%
+    "breakout_threshold": 0.001,
 
     # Stop loss as fraction of the opening range height.
     "stop_loss_range_multiple": 1.0,
