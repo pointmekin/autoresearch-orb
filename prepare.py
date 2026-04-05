@@ -38,8 +38,8 @@ RESULTS_DIR = os.path.join(os.path.dirname(__file__), "results")
 LOGS_DIR = os.path.join(os.path.dirname(__file__), "logs")
 
 # Backtest period
-BACKTEST_START = "2018-01-01"
-BACKTEST_END   = "2024-12-31"
+BACKTEST_START = "2024-06-01"
+BACKTEST_END   = "2026-04-05"
 
 # Walk-forward out-of-sample window (last N months of data are OOS)
 OOS_MONTHS = 12
@@ -61,6 +61,32 @@ def ensure_dirs():
         os.makedirs(d, exist_ok=True)
 
 
+def _download_chunked(sym, start, end, interval, chunk_days=700):
+    """Download data in chunks to work around yfinance's 730-day limit for intraday intervals."""
+    start_dt = pd.Timestamp(start)
+    end_dt = pd.Timestamp(end)
+    chunks = []
+    chunk_start = start_dt
+    while chunk_start < end_dt:
+        chunk_end = min(chunk_start + pd.Timedelta(days=chunk_days), end_dt)
+        df_chunk = yf.download(
+            sym,
+            start=chunk_start.strftime("%Y-%m-%d"),
+            end=chunk_end.strftime("%Y-%m-%d"),
+            interval=interval,
+            auto_adjust=True,
+            progress=False,
+        )
+        if not df_chunk.empty:
+            chunks.append(df_chunk)
+        chunk_start = chunk_end
+    if not chunks:
+        return pd.DataFrame()
+    df = pd.concat(chunks)
+    df = df[~df.index.duplicated(keep="first")].sort_index()
+    return df
+
+
 def download_data(symbols=None, force_refresh=False):
     """Download historical OHLCV data for all symbols. Cached to disk."""
     ensure_dirs()
@@ -76,14 +102,7 @@ def download_data(symbols=None, force_refresh=False):
             continue
 
         try:
-            df = yf.download(
-                sym,
-                start=BACKTEST_START,
-                end=BACKTEST_END,
-                interval=INTRADAY_INTERVAL,
-                auto_adjust=True,
-                progress=False,
-            )
+            df = _download_chunked(sym, BACKTEST_START, BACKTEST_END, INTRADAY_INTERVAL)
             if df.empty:
                 print(f"  [WARN]  {sym}: no data returned")
                 continue
@@ -225,4 +244,4 @@ if __name__ == "__main__":
     print("Downloading data for all symbols...")
     data = download_data(force_refresh=False)
     print(f"\nDone. {len(data)}/{len(ALL_SYMBOLS)} symbols loaded.")
-    print("Data ready. You can now run: python strategy.py")
+    print("Data ready. You can now run: uv run python3 strategy.py")
