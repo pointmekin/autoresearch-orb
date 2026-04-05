@@ -38,21 +38,24 @@ from prepare import (
 # ─── Strategy Parameters (agent modifies these) ──────────────────────────────
 
 PARAMS = {
-    # Opening range duration (bars). With 5m bars: 6 bars = 30 minutes.
-    "opening_range_bars": 6,
+    # Opening range duration (bars). With 5m bars: 12 bars = 1 hour.
+    "opening_range_bars": 12,
 
-    # Breakout threshold: how far price must exceed the range high/low to trigger entry.
-    # 0.001 = 0.1% (tighter threshold suits 5m precision)
+    # Breakout threshold: 0.001 = 0.1%
     "breakout_threshold": 0.001,
 
     # Stop loss as fraction of the opening range height.
     "stop_loss_range_multiple": 0.5,
 
     # Take profit as fraction of the opening range height.
-    "take_profit_range_multiple": 1.5,
+    "take_profit_range_multiple": 3.0,
 
     # Maximum number of trades per day per symbol (0 = unlimited)
-    "max_trades_per_day": 1,
+    "max_trades_per_day": 2,
+
+    # Minimum range height as fraction of price (skip quiet/flat sessions).
+    # 0.0015 = 0.15% — skips days with tiny opening ranges prone to false breakouts.
+    "min_range_pct": 0.0015,
 
     # Close all positions at end of session (True = no overnight holds)
     "close_at_session_end": True,
@@ -88,6 +91,7 @@ class ORBStrategy(Strategy):
     stop_loss_range_multiple  = PARAMS["stop_loss_range_multiple"]
     take_profit_range_multiple = PARAMS["take_profit_range_multiple"]
     max_trades_per_day        = PARAMS["max_trades_per_day"]
+    min_range_pct             = PARAMS["min_range_pct"]
     close_at_session_end      = PARAMS["close_at_session_end"]
     session_start_hour_utc    = PARAMS["session_start_hour_utc"]
     session_end_hour_utc      = PARAMS["session_end_hour_utc"]
@@ -147,6 +151,11 @@ class ORBStrategy(Strategy):
 
         range_height = self._range_high - self._range_low
         if range_height <= 0:
+            return
+
+        # ── Minimum range filter: skip flat/quiet sessions ────────────────
+        range_mid = (self._range_high + self._range_low) / 2
+        if self.min_range_pct > 0 and range_height / range_mid < self.min_range_pct:
             return
 
         # ── Trade limit ───────────────────────────────────────────────────
@@ -220,6 +229,7 @@ def run_experiment(tag: str, params: dict = None, optimize: bool = False):
         ORBStrategy.stop_loss_range_multiple   = params["stop_loss_range_multiple"]
         ORBStrategy.take_profit_range_multiple = params["take_profit_range_multiple"]
         ORBStrategy.max_trades_per_day         = params["max_trades_per_day"]
+        ORBStrategy.min_range_pct              = params["min_range_pct"]
         ORBStrategy.close_at_session_end       = params["close_at_session_end"]
         ORBStrategy.session_start_hour_utc     = params["session_start_hour_utc"]
         ORBStrategy.session_end_hour_utc       = params["session_end_hour_utc"]
