@@ -58,13 +58,13 @@ uv sync --dev
 ## 2. Download Data (one-time, ~2–5 min)
 
 ```bash
-uv run python prepare.py
+uv run python3 prepare.py
 ```
 
 ## 3. Run Baseline Experiment
 
 ```bash
-uv run python strategy.py
+uv run python3 strategy.py
 ```
 
 ## 4. Start the Agent
@@ -75,12 +75,12 @@ Open Claude Code (or your preferred AI coding agent) in this directory. Point it
 Read program.md and start the experiment loop.
 ```
 
-Then go to sleep. The agent will run experiments autonomously until you interrupt it. The agent should use `uv run python` for all script invocations.
+Then go to sleep. The agent will run experiments autonomously until you interrupt it. The agent should use `uv run python3` for all script invocations.
 
 ## 5. Review Results in the Morning
 
 ```bash
-uv run python analysis.py
+uv run python3 analysis.py
 ```
 
 # The Experiment Loop
@@ -152,12 +152,12 @@ The optimization target is `mean_sharpe` — we prioritize consistency across th
 
 # Tips for Best Results
 
-- Run `uv sync` once to install dependencies, then `uv run python prepare.py` to download data. Both only need to happen once.
+- Run `uv sync` once to install dependencies, then `uv run python3 prepare.py` to download data. Both only need to happen once.
 - Use `--dangerously-skip-permissions` in Claude Code so the agent doesn't pause to ask for confirmation on file edits or terminal commands.
 - The more specific `program.md` is about what to explore, the better the overnight results. After your first run, read `results.tsv`, identify which ideas showed promise but didn't quite beat baseline, and annotate them in `program.md`'s Ideas section.
 - A crash is not a failure — it gives the agent information. Let it log crashes and move on rather than getting stuck.
 - The simplicity criterion matters: a +0.001 Sharpe gain from 30 lines of complex code is not worth it. The agent is instructed to weight complexity against improvement magnitude.
-- For OOS validation after finding good IS params, run: `uv run python analysis.py --best` then manually run the best strategy on the test split to check for overfitting.
+- For OOS validation after finding good IS params, run: `uv run python3 analysis.py --best` then manually run the best strategy on the test split to check for overfitting.
 
 ---
 

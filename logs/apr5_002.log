@@ -1,0 +1,28 @@
+
+──────────────────────────────────────────────────
+TAG:              apr5_002
+mean_sharpe:      1.8279
+median_sharpe:    -0.2598
+mean_max_drawdown:-0.45%
+mean_total_return:0.26%
+num_symbols:      15
+params:           {"opening_range_bars": 3, "breakout_threshold": 0.0, "stop_loss_range_multiple": 1.0, "take_profit_range_multiple": 2.0, "max_trades_per_session": 1, "min_range_pct": 0.0, "close_at_session_end": true, "allowed_weekdays": [0, 1, 2, 3, 4], "sessions": [[8, 0, 12, 30], [13, 30, 20, 0]]}
+──────────────────────────────────────────────────
+  EURUSD=X       sharpe=-0.2598  dd=  -0.37%  ret=  -0.01%  trades=4
+  USDJPY=X       sharpe=-8.0518  dd=  -0.39%  ret=  -0.39%  trades=4
+  GBPUSD=X       sharpe=-2.9249  dd=  -0.55%  ret=   -0.2%  trades=4
+  AUDUSD=X       sharpe=-6.4296  dd=  -0.38%  ret=  -0.36%  trades=4
+  USDCAD=X       sharpe= 8.3984  dd=  -0.33%  ret=   0.42%  trades=4
+  USDCHF=X       sharpe=-6.2213  dd=  -0.44%  ret=  -0.38%  trades=4
+  NZDUSD=X       sharpe=-6.3601  dd=  -0.45%  ret=  -0.36%  trades=4
+  EURJPY=X       sharpe=-1.0165  dd=  -0.26%  ret=  -0.05%  trades=4
+  GC=F           sharpe= 9.9786  dd=  -0.24%  ret=   0.58%  trades=2
+  SI=F           sharpe=11.8687  dd=  -0.71%  ret=   3.03%  trades=2
+  CL=F           sharpe=   3.93  dd=  -0.93%  ret=   0.49%  trades=2
+  SPY            sharpe= 17.369  dd=  -0.33%  ret=   0.57%  trades=1
+  QQQ            sharpe=17.7056  dd=  -0.44%  ret=   0.71%  trades=1
+  ES=F           sharpe=-15.1195  dd=  -0.49%  ret=  -0.49%  trades=2
+  NQ=F           sharpe= 4.5517  dd=  -0.38%  ret=   0.29%  trades=2
+──────────────────────────────────────────────────
+
+  [saved] /Users/dhanabordeemekintharanggur/Desktop/Projects/autoresearch/autoresearch-orb/results/apr5_002.json
