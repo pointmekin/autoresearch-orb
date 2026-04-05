@@ -6,6 +6,8 @@ It is modeled after karpathy/autoresearch: you modify `strategy.py`, run the bac
 
 **Data interval:** 5-minute bars. yfinance free tier caps 5m data at ~60 days rolling, so the usable backtest window is approximately the last 60 days.
 
+**Backtest period:** Use the **full available 60-day window** ending at the current date. This means `BACKTEST_END` should be today (or the most recent trading day) and `BACKTEST_START` should be ~60 days before that. A 1–2 day backtest is useless for evaluating strategy robustness — we need weeks of data to see how the strategy performs across different market conditions. Before each experiment run, refresh the data by running `python prepare.py` with `force_refresh=True` so that the most recent data is fetched and cached.
+
 **Session design (FIXED — do not deviate):**
 - Trade ONLY during the opening ranges of **London** (08:00 UTC) and **New York** (13:30 UTC) sessions.
 - For the first **15 minutes** of each session (3 bars at 5m), do **nothing** — let the opening range zone form. Do not enter any trade during this formation window.
@@ -22,17 +24,23 @@ To begin a new research run, work with the user to:
 2. **Create the branch**: `git checkout -b autoresearch/<tag>` from current master.
 3. **Read the in-scope files**: Read these files in full before experimenting:
    - `README.md` — project overview and quick-start
-   - `prepare.py` — fixed constants, data download, evaluation metrics. **Do not modify.**
+   - `prepare.py` — fixed constants, data download, evaluation metrics. **Do not modify** (except `BACKTEST_START`/`BACKTEST_END` should be dynamic — see below).
    - `strategy.py` — the ORB strategy file. **This is the only file you modify.**
-4. **Verify data exists**: Check that the `data/` directory contains `.parquet` files. If not, tell the human to run `python prepare.py` first.
-5. **Initialize results.tsv**: Create `results.tsv` with just the header row (see format below).
-6. **Confirm and go**.
+4. **Ensure backtest window is full 60 days**: Before the first experiment run, update `BACKTEST_END` in `prepare.py` to today's date and `BACKTEST_START` to ~60 days prior. Then run `python prepare.py` with `force_refresh=True` to download fresh data covering the full window. This gives you ~60 trading days of 5-minute bars — enough to evaluate strategy performance across multiple weeks and market conditions.
+5. **Verify data exists**: Check that the `data/` directory contains `.parquet` files with data spanning the full 60-day window. If data is stale or missing, re-run `python prepare.py`.
+6. **Initialize results.tsv**: Create `results.tsv` with just the header row (see format below).
+7. **Confirm and go**.
 
 ---
 
 ## Experimentation
 
 Each experiment runs the backtest across **all symbols** (`ALL_SYMBOLS` in `prepare.py`).
+
+**Before starting the experiment loop**, refresh data to ensure you have the full 60-day window:
+```bash
+python -c "from prepare import download_data; download_data(force_refresh=True)"
+```
 
 **What you CAN do (all fair game in `strategy.py`):**
 - Change any value in the `PARAMS` dict

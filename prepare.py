@@ -37,11 +37,14 @@ DATA_DIR = os.path.join(os.path.dirname(__file__), "data")
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), "results")
 LOGS_DIR = os.path.join(os.path.dirname(__file__), "logs")
 
-# Backtest period
+# Backtest period — dynamically computed to use the full available 60-day window.
 # NOTE: yfinance free tier caps 5m intraday data at ~60 days rolling.
-# Set start to ~90 days ago; yfinance will return whatever it has (typically last 60 days).
-BACKTEST_START = "2026-02-04"  # ~60 days before BACKTEST_END; yfinance 5m rolling window
-BACKTEST_END   = "2026-04-05"
+# BACKTEST_END = today (or most recent trading day), BACKTEST_START = ~90 days before
+# (yfinance will return whatever it has, typically the last ~60 days).
+_today = datetime.date.today()
+# Go back ~90 days to ensure we capture the full 60-day rolling window yfinance provides
+BACKTEST_START = (_today - datetime.timedelta(days=90)).strftime("%Y-%m-%d")
+BACKTEST_END   = _today.strftime("%Y-%m-%d")
 
 # Walk-forward out-of-sample window (last N months of data are OOS)
 # Reduced to 1 month because we only have ~60 days of 5m data from yfinance free tier.
