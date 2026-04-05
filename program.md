@@ -4,6 +4,14 @@ This is an autonomous experiment loop for optimizing Opening Range Breakout (ORB
 
 It is modeled after karpathy/autoresearch: you modify `strategy.py`, run the backtest, keep improvements, discard regressions, and loop indefinitely while the human sleeps.
 
+**Data interval:** 5-minute bars. yfinance free tier caps 5m data at ~60 days rolling, so the usable backtest window is approximately the last 60 days.
+
+**Session design (FIXED — do not deviate):**
+- Trade ONLY during the opening ranges of **London** (08:00 UTC) and **New York** (13:30 UTC) sessions.
+- For the first **15 minutes** of each session (3 bars at 5m), do **nothing** — let the opening range zone form. Do not enter any trade during this formation window.
+- After the 15-minute range is established, trade breakouts above/below the range high/low.
+- Close all open positions at session end (London closes ~12:30 UTC; NY closes ~20:00 UTC).
+
 ---
 
 ## Setup
@@ -42,6 +50,11 @@ Each experiment runs the backtest across **all symbols** (`ALL_SYMBOLS` in `prep
 - Change `ALL_SYMBOLS`, `BACKTEST_START`, `BACKTEST_END`, `INTRADAY_INTERVAL` (defined in prepare.py)
 - Use data sources other than what `prepare.py` loads
 - Install new packages
+
+**Data note:** With 5m bars, `opening_range_bars = 3` = 15 minutes. Sessions at 5m:
+- London: starts 08:00 UTC, range forms 08:00–08:15, trade 08:15–12:30
+- New York: starts 13:30 UTC, range forms 13:30–13:45, trade 13:45–20:00
+- Each session is independent — reset range state at each session open.
 
 **The goal: MAXIMIZE `mean_sharpe` across all symbols on in-sample training data.**
 
@@ -154,10 +167,11 @@ Commit only the working experiments. The TSV captures the full history including
 When you feel stuck, consult this list. You are also encouraged to generate your own hypotheses.
 
 **Parameter tuning:**
-- Range window: 1 bar (1h), 2 bars, 3 bars, 4 bars — which is most robust?
+- Range window: 3 bars (15m), 6 bars (30m), 12 bars (1h) — which is most robust at 5m?
 - Breakout threshold: 0 (any breakout), 0.1%, 0.2%, 0.5%
 - SL/TP ratios: asymmetric? (different multipliers per instrument class?)
-- Max trades per day: 1 vs 2 vs unlimited
+- Multiple TP/SL ratio combos: e.g. 1.0x, 1.5x, 2.0x, 3.0x TP vs 0.5x, 1.0x SL — grid search which ratio maximizes Sharpe
+- Max trades per session: 1 vs 2 vs unlimited (note: two sessions per day now)
 
 **Entry filters:**
 - Volume confirmation: only trade if volume on breakout bar > N-period average
@@ -165,7 +179,9 @@ When you feel stuck, consult this list. You are also encouraged to generate your
 - Volatility filter: skip if ATR is too low (dead market) or too high (chaotic)
 - Time filter: only enter in first 4 hours of session, not in last 2
 
-**Exit rules:**
+**Exit rules / stop loss placement:**
+- SL at range midpoint: set stop at the 50% level of the opening range (tighter SL, smaller loss if wrong)
+- SL at range high/low: for a long breakout, SL at range low; for a short breakout, SL at range high (full-range SL, wider but cleaner invalidation)
 - Trailing stop: activate after price moves X% in our favor
 - Time-based exit: close trade if still open after N hours
 - Re-entry: allow re-entry after stopped out if breakout continues

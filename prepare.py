@@ -38,11 +38,14 @@ RESULTS_DIR = os.path.join(os.path.dirname(__file__), "results")
 LOGS_DIR = os.path.join(os.path.dirname(__file__), "logs")
 
 # Backtest period
-BACKTEST_START = "2024-06-01"
+# NOTE: yfinance free tier caps 5m intraday data at ~60 days rolling.
+# Set start to ~90 days ago; yfinance will return whatever it has (typically last 60 days).
+BACKTEST_START = "2026-02-04"  # ~60 days before BACKTEST_END; yfinance 5m rolling window
 BACKTEST_END   = "2026-04-05"
 
 # Walk-forward out-of-sample window (last N months of data are OOS)
-OOS_MONTHS = 12
+# Reduced to 1 month because we only have ~60 days of 5m data from yfinance free tier.
+OOS_MONTHS = 1
 
 # Fixed evaluation metric: Sharpe Ratio (annualized, higher is better)
 # Secondary: Max Drawdown (lower magnitude is better), Win Rate
@@ -50,10 +53,13 @@ METRIC_PRIMARY = "sharpe_ratio"
 
 # Opening range window (in minutes). This is the "opening range" duration.
 # FIXED — do not change this constant. The agent parameterizes it in strategy.py.
-DEFAULT_ORB_MINUTES = 30
+# At 5m bars: 15 minutes = 3 bars. Strategy trades breakout AFTER the range forms.
+DEFAULT_ORB_MINUTES = 15
 
 # Intraday data interval for backtesting
-INTRADAY_INTERVAL = "1h"  # 1-hour bars (yfinance free tier supports up to 2 years of 1h data)
+# 5m bars: yfinance free tier supports ~60 days of 5m data.
+# At 5m: ~78 bars/trading day (6.5h * 12 bars/h) for US equities; forex runs 24/5.
+INTRADAY_INTERVAL = "5m"
 
 
 def ensure_dirs():
@@ -61,7 +67,7 @@ def ensure_dirs():
         os.makedirs(d, exist_ok=True)
 
 
-def _download_chunked(sym, start, end, interval, chunk_days=700):
+def _download_chunked(sym, start, end, interval, chunk_days=58):
     """Download data in chunks to work around yfinance's 730-day limit for intraday intervals."""
     start_dt = pd.Timestamp(start)
     end_dt = pd.Timestamp(end)
@@ -158,8 +164,8 @@ def compute_metrics(equity_curve: pd.Series) -> dict:
 
     returns = equity_curve.pct_change().dropna()
 
-    # Annualized Sharpe (assume ~252 trading days, ~6 hours/day for intraday)
-    periods_per_year = 252 * 6  # hourly bars
+    # Annualized Sharpe (assume ~252 trading days, ~6.5 hours/day * 12 bars/hour for 5m)
+    periods_per_year = 252 * 78  # 5-minute bars (US equities approximation)
     sharpe = (
         returns.mean() / returns.std() * (periods_per_year ** 0.5)
         if returns.std() > 0 else -999.0

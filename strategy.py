@@ -38,8 +38,9 @@ from prepare import (
 # ─── Strategy Parameters (agent modifies these) ──────────────────────────────
 
 PARAMS = {
-    # Opening range duration (bars). With 5m bars: 12 bars = 1 hour.
-    "opening_range_bars": 12,
+    # Opening range duration (bars). With 5m bars: 3 bars = 15 minutes.
+    # The first N bars after session open are observation-only; trade starts after.
+    "opening_range_bars": 3,
 
     # Breakout threshold: 0.001 = 0.1%
     "breakout_threshold": 0.001,
@@ -48,102 +49,107 @@ PARAMS = {
     "stop_loss_range_multiple": 0.5,
 
     # Take profit as fraction of the opening range height.
-    "take_profit_range_multiple": 3.0,
+    "take_profit_range_multiple": 2.0,
 
-    # Maximum number of trades per day per symbol (0 = unlimited)
-    "max_trades_per_day": 2,
+    # Maximum number of trades per session per symbol (0 = unlimited)
+    "max_trades_per_session": 1,
 
     # Minimum range height as fraction of price (skip quiet/flat sessions).
-    # 0.0015 = 0.15% — skips days with tiny opening ranges prone to false breakouts.
-    "min_range_pct": 0.0015,
+    "min_range_pct": 0.001,
 
-    # Close all positions at end of session (True = no overnight holds)
+    # Close all positions at session end (True = no overnight holds)
     "close_at_session_end": True,
 
-    # Session start hour (UTC). Range builds from first N bars at/after this hour.
-    # 8 = London open (forex). Equity ETFs (SPY/QQQ) naturally start at 14:30 UTC.
-    "session_start_hour_utc": 8,
-
-    # Session end hour (UTC). Trades are closed after this hour.
-    "session_end_hour_utc": 21,
-
-    # Day-of-week filter: list of allowed weekdays (0=Mon, 4=Fri, 5=Sat, 6=Sun)
+    # Day-of-week filter: list of allowed weekdays (0=Mon, 4=Fri)
     "allowed_weekdays": [0, 1, 2, 3, 4],  # Mon–Fri
+
+    # Sessions: list of (start_hour_utc, start_minute_utc, end_hour_utc, end_minute_utc)
+    # London: 08:00–12:30 UTC  |  New York: 13:30–20:00 UTC
+    "sessions": [
+        (8,  0,  12, 30),   # London
+        (13, 30, 20, 0),    # New York
+    ],
 }
 
 # ─── ORB Strategy Class ───────────────────────────────────────────────────────
 
+def _session_key(dt, sessions):
+    """Return (start_h, start_m) key of the active session for dt, or None."""
+    for (sh, sm, eh, em) in sessions:
+        session_start = dt.replace(hour=sh, minute=sm, second=0, microsecond=0)
+        session_end   = dt.replace(hour=eh, minute=em, second=0, microsecond=0)
+        if session_start <= dt < session_end:
+            return (sh, sm)
+    return None
+
+
 class ORBStrategy(Strategy):
     """
-    Classic Opening Range Breakout.
+    Dual-session Opening Range Breakout (5m bars).
 
     Logic:
-    1. Define opening range as the High/Low of the first `opening_range_bars` bars.
-    2. If price breaks above range_high * (1 + breakout_threshold), go long.
-    3. If price breaks below range_low * (1 - breakout_threshold), go short.
+    1. Two sessions per day: London (08:00–12:30 UTC) and New York (13:30–20:00 UTC).
+    2. First `opening_range_bars` bars (default 3 = 15 min) after each session open:
+       observe only, build the opening range High/Low. Do NOT trade yet.
+    3. After range is set, trade breakouts above range_high or below range_low.
     4. Stop loss and take profit based on range height multiples.
-    5. Close all trades at session_end_hour_utc.
+    5. Close all open trades at session end. Reset range state for next session.
     """
 
-    # Strategy parameters (set by backtesting.py optimizer or from PARAMS)
-    opening_range_bars        = PARAMS["opening_range_bars"]
-    breakout_threshold        = PARAMS["breakout_threshold"]
-    stop_loss_range_multiple  = PARAMS["stop_loss_range_multiple"]
+    opening_range_bars         = PARAMS["opening_range_bars"]
+    breakout_threshold         = PARAMS["breakout_threshold"]
+    stop_loss_range_multiple   = PARAMS["stop_loss_range_multiple"]
     take_profit_range_multiple = PARAMS["take_profit_range_multiple"]
-    max_trades_per_day        = PARAMS["max_trades_per_day"]
-    min_range_pct             = PARAMS["min_range_pct"]
-    close_at_session_end      = PARAMS["close_at_session_end"]
-    session_start_hour_utc    = PARAMS["session_start_hour_utc"]
-    session_end_hour_utc      = PARAMS["session_end_hour_utc"]
+    max_trades_per_session     = PARAMS["max_trades_per_session"]
+    min_range_pct              = PARAMS["min_range_pct"]
+    close_at_session_end       = PARAMS["close_at_session_end"]
 
     def init(self):
-        self._range_high = None
-        self._range_low  = None
-        self._current_session = None
-        self._trades_today = 0
-        self._range_set = False
+        self._active_session   = None   # (start_h, start_m) key
+        self._session_open_bar = None   # bar index when session started
+        self._range_high       = None
+        self._range_low        = None
+        self._range_set        = False
+        self._trades_this_session = 0
 
     def next(self):
         current_time = self.data.index[-1]
-        current_hour = current_time.hour
 
-        # ── Session boundary: shifts "day" to start at session_start_hour_utc ─
-        session_day = (current_time - pd.Timedelta(hours=self.session_start_hour_utc)).date()
-
-        # ── New session: reset state ──────────────────────────────────────
-        if session_day != self._current_session:
-            self._current_session = session_day
-            self._trades_today = 0
-            self._range_set    = False
-            self._range_high   = None
-            self._range_low    = None
-            self._day_open_bar = len(self.data) - 1
-
-        # ── Before session start: skip ────────────────────────────────────
-        if current_hour < self.session_start_hour_utc:
-            return
-
-        # ── Session end: close everything ─────────────────────────────────
-        if self.close_at_session_end and current_hour >= self.session_end_hour_utc:
-            if self.position:
-                self.position.close()
-            return
-
-        # ── Skip disallowed weekdays ───────────────────────────────────────
+        # ── Skip disallowed weekdays ──────────────────────────────────────
         if current_time.weekday() not in PARAMS["allowed_weekdays"]:
             return
 
-        # ── Build opening range ────────────────────────────────────────────
-        bars_into_session = len(self.data) - 1 - self._day_open_bar
+        sessions = PARAMS["sessions"]
+        sess_key = _session_key(current_time, sessions)
 
+        # ── Between sessions: close any open position ─────────────────────
+        if sess_key is None:
+            if self.close_at_session_end and self.position:
+                self.position.close()
+            return
+
+        # ── New session started: reset range state ────────────────────────
+        if sess_key != self._active_session:
+            # Close leftover position from previous session
+            if self.close_at_session_end and self.position:
+                self.position.close()
+            self._active_session      = sess_key
+            self._session_open_bar    = len(self.data) - 1
+            self._range_high          = None
+            self._range_low           = None
+            self._range_set           = False
+            self._trades_this_session = 0
+
+        # ── Formation window: observe only, no trades ─────────────────────
+        bars_into_session = len(self.data) - 1 - self._session_open_bar
         if not self._range_set:
             if bars_into_session < self.opening_range_bars:
-                return  # Still in range-formation window
-            # Range is now complete — use first N bars of the session
+                return  # Still forming the opening range — do nothing
+            # Range complete: capture High/Low of the formation bars
             range_slice_high = self.data.High[-self.opening_range_bars - 1 : -1]
             range_slice_low  = self.data.Low[-self.opening_range_bars - 1 : -1]
-            self._range_high = max(range_slice_high)
-            self._range_low  = min(range_slice_low)
+            self._range_high = float(max(range_slice_high))
+            self._range_low  = float(min(range_slice_low))
             self._range_set  = True
 
         if self._range_high is None or self._range_low is None:
@@ -153,35 +159,30 @@ class ORBStrategy(Strategy):
         if range_height <= 0:
             return
 
-        # ── Minimum range filter: skip flat/quiet sessions ────────────────
+        # ── Minimum range filter ──────────────────────────────────────────
         range_mid = (self._range_high + self._range_low) / 2
         if self.min_range_pct > 0 and range_height / range_mid < self.min_range_pct:
             return
 
-        # ── Trade limit ───────────────────────────────────────────────────
-        if self.max_trades_per_day > 0 and self._trades_today >= self.max_trades_per_day:
+        # ── Per-session trade limit ───────────────────────────────────────
+        if self.max_trades_per_session > 0 and self._trades_this_session >= self.max_trades_per_session:
             return
 
-        # ── Entry signals (breakout direction) ───────────────────────────
-        close = self.data.Close[-1]
-        sl_dist = range_height * self.stop_loss_range_multiple
-        tp_dist = range_height * self.take_profit_range_multiple
+        # ── Entry signals ─────────────────────────────────────────────────
+        close     = self.data.Close[-1]
+        sl_dist   = range_height * self.stop_loss_range_multiple
+        tp_dist   = range_height * self.take_profit_range_multiple
 
         long_trigger  = self._range_high * (1 + self.breakout_threshold)
         short_trigger = self._range_low  * (1 - self.breakout_threshold)
 
         if not self.position:
             if close > long_trigger:
-                sl = close - sl_dist
-                tp = close + tp_dist
-                self.buy(sl=sl, tp=tp)
-                self._trades_today += 1
-
+                self.buy(sl=close - sl_dist, tp=close + tp_dist)
+                self._trades_this_session += 1
             elif close < short_trigger:
-                sl = close + sl_dist
-                tp = close - tp_dist
-                self.sell(sl=sl, tp=tp)
-                self._trades_today += 1
+                self.sell(sl=close + sl_dist, tp=close - tp_dist)
+                self._trades_this_session += 1
 
 
 # ─── Run Backtest ─────────────────────────────────────────────────────────────
@@ -228,11 +229,9 @@ def run_experiment(tag: str, params: dict = None, optimize: bool = False):
         ORBStrategy.breakout_threshold         = params["breakout_threshold"]
         ORBStrategy.stop_loss_range_multiple   = params["stop_loss_range_multiple"]
         ORBStrategy.take_profit_range_multiple = params["take_profit_range_multiple"]
-        ORBStrategy.max_trades_per_day         = params["max_trades_per_day"]
+        ORBStrategy.max_trades_per_session     = params["max_trades_per_session"]
         ORBStrategy.min_range_pct              = params["min_range_pct"]
         ORBStrategy.close_at_session_end       = params["close_at_session_end"]
-        ORBStrategy.session_start_hour_utc     = params["session_start_hour_utc"]
-        ORBStrategy.session_end_hour_utc       = params["session_end_hour_utc"]
 
         try:
             bt = Backtest(
