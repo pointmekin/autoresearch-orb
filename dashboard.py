@@ -27,7 +27,22 @@ def parse_tsv(path):
 
 
 def load_symbol_data(tag, results_dir='results'):
-    pass
+    """Load per-symbol data from results/<tag>.json.
+
+    Returns None if the file does not exist or tag is empty.
+    Returns a dict with keys: mean_total_return (float or None), symbols (dict).
+    """
+    if not tag:
+        return None
+    path = pathlib.Path(results_dir) / f"{tag}.json"
+    if not path.exists():
+        return None
+    with open(path, encoding='utf-8') as f:
+        data = json.load(f)
+    return {
+        'mean_total_return': data.get('aggregate', {}).get('mean_total_return'),
+        'symbols': data.get('results', {}),
+    }
 
 
 def generate_html(runs):

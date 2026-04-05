@@ -64,3 +64,40 @@ class TestParseTsv(unittest.TestCase):
         self.assertEqual(runs[1]['status'], 'discard')
         self.assertEqual(runs[2]['tag'], 'apr5_003')
         os.unlink(path)
+
+
+class TestLoadSymbolData(unittest.TestCase):
+
+    def setUp(self):
+        self.tmpdir = tempfile.mkdtemp()
+
+    def tearDown(self):
+        import shutil
+        shutil.rmtree(self.tmpdir)
+
+    def _write_json(self, tag, data):
+        path = os.path.join(self.tmpdir, f"{tag}.json")
+        with open(path, 'w') as f:
+            json.dump(data, f)
+
+    def test_returns_none_for_missing_tag(self):
+        result = load_symbol_data('nonexistent_tag', self.tmpdir)
+        self.assertIsNone(result)
+
+    def test_returns_symbol_data_and_total_return(self):
+        self._write_json('apr5_001', {
+            "tag": "apr5_001",
+            "aggregate": {
+                "mean_sharpe": 1.82,
+                "mean_total_return": 3.45,
+            },
+            "results": {
+                "EURUSD=X": {"sharpe_ratio": 2.1, "num_trades": 10},
+                "GC=F": {"sharpe_ratio": -0.5, "num_trades": 8},
+            }
+        })
+        result = load_symbol_data('apr5_001', self.tmpdir)
+        self.assertIsNotNone(result)
+        self.assertAlmostEqual(result['mean_total_return'], 3.45)
+        self.assertIn('EURUSD=X', result['symbols'])
+        self.assertAlmostEqual(result['symbols']['EURUSD=X']['sharpe_ratio'], 2.1)
