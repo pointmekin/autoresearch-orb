@@ -1,47 +1,4 @@
 commit	mean_sharpe	mean_max_dd	status	description
-4f6ffe6	-5.0107	-0.29	keep	baseline 5m ORB: 3-bar range, 0.1% thresh, SL=0.5x, TP=2.0x, max1/session
-20a9ab6	1.8279	-0.45	keep	remove threshold, SL=1.0x, min_range=0: more trades, much better
-bd1cb06	2.1835	-0.70	keep	max 2 trades/session: more samples, higher sharpe
-786ab5c	0.9755	-0.84	discard	TP=3.0x: wider TP hurt, fewer fills
-866d4ed	2.1005	-0.58	discard	TP=1.5x: slightly worse than 2.0x
-1276b9d	2.1835	-0.70	discard	skip Friday: identical result (no Friday trades in data)
-67d4fd4	0.5854	-0.70	discard	volume filter: hurt SPY/QQQ, unreliable vol data
-cacd6d6	-133.696	-0.37	discard	London only: SPY/QQQ zero trades, -999 sharpe
-131db86	-3.7564	-1.39	discard	unlimited trades: over-trading, churn kills returns
-8025974	2.0450	-0.65	discard	SL=0.75x: EURUSD better but GC=F collapsed
-943816d	2.9338	-0.73	keep	6-bar (30min) range: better levels, higher sharpe
-5122322	-0.8456	-1.01	discard	12-bar (1h) range: too long, eats session time
-e28dca7	3.0204	-0.70	keep	6-bar range + 0.1% threshold: filters weak breakouts
-8db4dca	1.1179	-0.67	discard	0.2% threshold: too strict, filters good trades
-1833e6c	-2.7256	-1.06	discard	SMA20 momentum filter: killed commodity trades
-1becbf0	-3.6692	-0.64	discard	SL=0.5x: stops too tight, frequent stop-outs
-eb4e777	3.5135	-0.51	keep	1 trade/session: more selective, better returns and DD
-32e13fe	3.3240	-0.48	discard	TP=1.5x with 6-bar: slightly worse than 2.0x
-8502a37	2.8207	-0.56	discard	SL=1.5x: wider stops mean bigger losses
-893d7f3	3.5135	-0.51	discard	Mon-Wed: identical result (all trades already Mon-Wed)
-2cc4ba2	4.1078	-0.49	keep	2hr time filter: avoids late chop, EURJPY flipped positive
-3881ada	4.6056	-0.44	keep	1.5hr time window: EURUSD +5.6, NZDUSD +4.6, tighter window works
-ddcf318	4.9609	-0.42	keep	1hr time window: GBPUSD and USDCHF improved, DD better
-de6382c	-261.5622	-0.33	discard	45min window: too tight, 4 symbols get 0 trades
-f5833d8	4.4168	-0.51	discard	TP=2.5x: CL=F collapsed, overall worse
-a658a93	-63.1533	-0.40	discard	min_range 0.15%: too strict for forex, EURJPY zero trades
-a3e73e1	-395.056	-0.20	discard	NY only: forex gets 0 trades, need both sessions
-d511e33	-128.9745	-0.37	discard	4-bar range: too restrictive with 1hr window, 2 symbols zero trades
-fb98db7	4.9609	-0.42	discard	trailing stop: no effect, backtesting.py manages SL/TP internally
-c8a6126	6.6631	-0.28	keep	TP=1.0x symmetric R:R: USDCAD +7.9, USDCHF +6.8, massive improvement
-2631bf5	1.4405	-0.27	discard	SL=TP=0.75x: too tight, frequent stop-outs and small TPs
-4158811	2.8815	-0.35	discard	no threshold with TP=SL=1.0x: weak breakouts hurt forex
-f4b2171	6.4198	-0.27	discard	ATR filter: NZDUSD flipped negative, QQQ dropped, slight net loss
-0aeb577	6.6894	-0.32	keep	TP=SL=1.0x, 2 trades/session: GC+SI+ES improved, marginal gain
-cce571f	5.2391	-0.55	discard	SL=TP=1.5x: wider R:R hurts, USDCAD collapsed
-7b8b627	-61.7044	-0.38	discard	8-bar range: SPY zero trades, range+window too long
-1884e28	-264.1818	-0.20	discard	long-only: commodities zero trades, shorts are profitable
-50638c6	6.6631	-0.28	keep	revert to 1 trade/session: simplicity criterion (2 trades only +0.03)
-f8cfdb4	6.4787	-0.29	discard	SL at range boundary: wider SL hurt GBPUSD and AUDUSD
-c86f974	-127.9089	-0.26	discard	5-bar range: odd bar count, 2 symbols zero trades
-39a2e54	6.0647	-0.29	discard	1.5hr window: USDCHF dropped, 1hr better
-8100b70	-62.0403	-0.28	discard	7-bar range: SPY zero trades, 6-bar is optimal
-efda8ef	6.6328	-0.28	discard	bullish bar filter: marginal worse, no benefit
 4bd5b53	0.1010	-1.97	keep	baseline: fix tz handling, all data for training (30d window)
 f023361	-0.7221	-2.56	discard	remove time filter: over-trading hurt
 456f654	-2.4110	-2.26	discard	3-bar (15min) range: too narrow, noisy levels

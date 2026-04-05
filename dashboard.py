@@ -64,8 +64,13 @@ def generate_html(runs):
   #header .meta {{ color: #555; font-size: 11px; }}
   #chart-panel {{ background: #111; border: 1px solid #222; border-radius: 6px;
                   padding: 16px; margin-bottom: 16px; }}
-  #chart-label {{ font-size: 10px; color: #444; text-transform: uppercase;
+  #chart-label {{ display: flex; justify-content: space-between; align-items: center;
+                  font-size: 10px; color: #444; text-transform: uppercase;
                   letter-spacing: 1px; margin-bottom: 12px; }}
+  #hide-neg-label {{ display: flex; align-items: center; gap: 5px; cursor: pointer;
+                     font-size: 10px; color: #555; text-transform: uppercase;
+                     letter-spacing: 0.5px; }}
+  #hide-neg {{ cursor: pointer; accent-color: #4fc3f7; }}
   #chart-container {{ position: relative; height: 300px; }}
   .legend {{ display: flex; gap: 16px; margin-top: 10px; }}
   .legend-item {{ display: flex; align-items: center; gap: 6px; font-size: 10px; color: #555; }}
@@ -112,7 +117,12 @@ def generate_html(runs):
 </div>
 
 <div id="chart-panel">
-  <div id="chart-label">mean_sharpe by iteration — click a bar to inspect</div>
+  <div id="chart-label">
+    <span>mean_sharpe by iteration — click a bar to inspect</span>
+    <label id="hide-neg-label">
+      <input type="checkbox" id="hide-neg" checked> hide negative sharpe
+    </label>
+  </div>
   <div id="chart-container"><canvas id="chart"></canvas></div>
   <div class="legend">
     <div class="legend-item"><div class="legend-dot" style="background:#4fc3f7"></div>keep</div>
@@ -163,9 +173,21 @@ const barColors = RUNS.map(r =>
   r.status === 'keep' ? '#4fc3f7' :
   r.status === 'crash' ? '#b71c1c' : '#3a3a3a'
 );
-const lineData = RUNS.map(r => r.status === 'keep' ? r.mean_sharpe : null);
 
 let selectedIndex = null;
+const hideNeg = document.getElementById('hide-neg');
+
+function compressSharpe(v) {{
+  return v >= 0 ? v : -Math.pow(Math.abs(v), 0.5);
+}}
+
+function getBarData() {{
+  return RUNS.map(r => (!hideNeg.checked || r.mean_sharpe >= 0) ? compressSharpe(r.mean_sharpe) : null);
+}}
+
+function getLineData() {{
+  return RUNS.map(r => (r.status === 'keep' && (!hideNeg.checked || r.mean_sharpe >= 0)) ? compressSharpe(r.mean_sharpe) : null);
+}}
 
 // Zero reference line plugin
 Chart.register({{
@@ -193,7 +215,7 @@ const chart = new Chart(ctx, {{
       {{
         type: 'bar',
         label: 'mean_sharpe',
-        data: RUNS.map(r => r.mean_sharpe),
+        data: getBarData(),
         backgroundColor: barColors,
         borderWidth: 0,
         borderRadius: 2,
@@ -201,7 +223,7 @@ const chart = new Chart(ctx, {{
       {{
         type: 'line',
         label: 'keep frontier',
-        data: lineData,
+        data: getLineData(),
         borderColor: 'rgba(79,195,247,0.4)',
         borderWidth: 1.5,
         pointRadius: 0,
@@ -254,11 +276,24 @@ const chart = new Chart(ctx, {{
       }},
       y: {{
         grid: {{ color: '#1a1a1a' }},
-        ticks: {{ color: '#555', font: {{ size: 10 }} }},
+        ticks: {{
+          color: '#555',
+          font: {{ size: 10 }},
+          callback: function(value) {{
+            if (value >= 0) return value.toFixed(2);
+            return (-Math.pow(Math.abs(value), 2)).toFixed(1);
+          }}
+        }},
         border: {{ dash: [2, 2] }}
       }}
     }}
   }}
+}});
+
+hideNeg.addEventListener('change', () => {{
+  chart.data.datasets[0].data = getBarData();
+  chart.data.datasets[1].data = getLineData();
+  chart.update();
 }});
 
 function renderDetail(run) {{
@@ -336,6 +371,29 @@ def main():
         return
 
     runs = parse_tsv(str(tsv_path))
+
+    # When TSV lacks tags, assign from JSON filenames by position
+    has_tags = any(run['tag'] for run in runs)
+    if not has_tags and results_dir.exists():
+        tags = []
+        for f in results_dir.glob('*.json'):
+            try:
+                with open(f, encoding='utf-8') as fh:
+                    agg = json.load(fh).get('aggregate', {})
+                if agg.get('mean_sharpe', 0) == -999.0:
+                    continue
+            except Exception:
+                continue
+            tags.append(f.stem)
+        def sort_key(t):
+            parts = t.rsplit('_', 1)
+            if len(parts) == 2 and parts[1].isdigit():
+                return (0, int(parts[1]))
+            return (1, t)
+        tags.sort(key=sort_key)
+        for i, run in enumerate(runs):
+            if i < len(tags):
+                run['tag'] = tags[i]
 
     for run in runs:
         sym_data = load_symbol_data(run['tag'], str(results_dir))
