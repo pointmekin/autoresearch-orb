@@ -14,26 +14,15 @@ def parse_tsv(path):
     runs = []
     with open(path, newline='', encoding='utf-8') as f:
         reader = csv.DictReader(f, delimiter='\t')
-        has_tag = 'tag' in (reader.fieldnames or [])
         for row in reader:
-            if has_tag:
-                runs.append({
-                    'tag': row['tag'],
-                    'commit': row['commit'],
-                    'mean_sharpe': float(row['mean_sharpe']),
-                    'mean_max_dd': float(row['mean_max_dd']),
-                    'status': row['status'],
-                    'description': row['description'],
-                })
-            else:
-                runs.append({
-                    'tag': '',
-                    'commit': row['commit'],
-                    'mean_sharpe': float(row['mean_sharpe']),
-                    'mean_max_dd': float(row['mean_max_dd']),
-                    'status': row['status'],
-                    'description': row['description'],
-                })
+            runs.append({
+                'tag': row.get('tag', ''),
+                'commit': row['commit'],
+                'mean_sharpe': float(row['mean_sharpe']),
+                'mean_max_dd': float(row['mean_max_dd']),
+                'status': row['status'],
+                'description': row['description'],
+            })
     return runs
 
 

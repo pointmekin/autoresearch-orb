@@ -1,2 +1,5 @@
 dashboard.html
 .superpowers/
+__pycache__/
+*.pyc
+*.pyo
