@@ -1,12 +1,12 @@
 
 ──────────────────────────────────────────────────
-TAG:              apr5_010
+TAG:              apr5_000
 mean_sharpe:      0.101
 median_sharpe:    0.3136
 mean_max_drawdown:-1.97%
 mean_total_return:1.26%
 num_symbols:      15
-params:           {"opening_range_bars": 6, "breakout_threshold": 0.001, "stop_loss_range_multiple": 1.0, "take_profit_range_multiple": 1.0, "max_trades_per_session": 1, "min_range_pct": 0.0003, "close_at_session_end": true, "allowed_weekdays": [0, 1, 2, 3, 4], "sessions": [[8, 0, 12, 30], [13, 30, 20, 0]]}
+params:           {"opening_range_bars": 6, "breakout_threshold": 0.001, "stop_loss_range_multiple": 1.0, "take_profit_range_multiple": 1.0, "max_trades_per_session": 1, "min_range_pct": 0.0, "close_at_session_end": true, "allowed_weekdays": [0, 1, 2, 3, 4], "sessions": [[8, 0, 12, 30], [13, 30, 20, 0]]}
 ──────────────────────────────────────────────────
   EURUSD=X       sharpe=-3.0398  dd=  -0.81%  ret=  -0.73%  trades=12
   USDJPY=X       sharpe=-3.0716  dd=  -0.76%  ret=  -0.71%  trades=10
@@ -25,4 +25,4 @@ params:           {"opening_range_bars": 6, "breakout_threshold": 0.001, "stop_l
   NQ=F           sharpe= 1.7336  dd=  -1.56%  ret=   1.92%  trades=23
 ──────────────────────────────────────────────────
 
-  [saved] /Users/dhanabordeemekintharanggur/Desktop/Projects/autoresearch/autoresearch-orb/results/apr5_010.json
+  [saved] /Users/dhanabordeemekintharanggur/Desktop/Projects/autoresearch/autoresearch-orb/results/apr5_000.json

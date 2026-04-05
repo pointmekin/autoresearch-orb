@@ -1,28 +1,28 @@
 
 ──────────────────────────────────────────────────
 TAG:              apr5_020
-mean_sharpe:      3.5135
-median_sharpe:    1.7701
-mean_max_drawdown:-0.51%
-mean_total_return:0.56%
+mean_sharpe:      0.3346
+median_sharpe:    0.5071
+mean_max_drawdown:-1.37%
+mean_total_return:1.98%
 num_symbols:      15
-params:           {"opening_range_bars": 6, "breakout_threshold": 0.001, "stop_loss_range_multiple": 1.0, "take_profit_range_multiple": 2.0, "max_trades_per_session": 1, "min_range_pct": 0.0, "close_at_session_end": true, "allowed_weekdays": [0, 1, 2], "sessions": [[8, 0, 12, 30], [13, 30, 20, 0]]}
+params:           {"opening_range_bars": 6, "breakout_threshold": 0.001, "stop_loss_range_multiple": 2.0, "take_profit_range_multiple": 0.75, "max_trades_per_session": 1, "min_range_pct": 0.0, "close_at_session_end": true, "allowed_weekdays": [1, 2, 3, 4], "sessions": [[8, 0, 12, 30], [13, 30, 20, 0]]}
 ──────────────────────────────────────────────────
-  EURUSD=X       sharpe= 1.4303  dd=  -0.44%  ret=   0.08%  trades=4
-  USDJPY=X       sharpe=-7.2005  dd=  -0.29%  ret=  -0.23%  trades=2
-  GBPUSD=X       sharpe=-6.2054  dd=  -0.61%  ret=  -0.39%  trades=4
-  AUDUSD=X       sharpe= 1.7701  dd=  -0.64%  ret=   0.13%  trades=4
-  USDCAD=X       sharpe=-10.6085  dd=  -0.68%  ret=   -0.6%  trades=3
-  USDCHF=X       sharpe=-5.1261  dd=  -0.48%  ret=  -0.34%  trades=4
-  NZDUSD=X       sharpe= 1.0998  dd=  -0.58%  ret=   0.07%  trades=4
-  EURJPY=X       sharpe=-3.2317  dd=  -0.31%  ret=  -0.11%  trades=3
-  GC=F           sharpe=10.2902  dd=  -0.32%  ret=    0.9%  trades=2
-  SI=F           sharpe=11.4966  dd=  -0.74%  ret=   3.02%  trades=2
-  CL=F           sharpe= 9.8894  dd=  -1.04%  ret=   3.32%  trades=2
-  SPY            sharpe=14.2082  dd=  -0.35%  ret=   0.39%  trades=1
-  QQQ            sharpe=15.4659  dd=  -0.44%  ret=   0.57%  trades=1
-  ES=F           sharpe=10.1714  dd=  -0.28%  ret=   0.62%  trades=2
-  NQ=F           sharpe= 9.2525  dd=  -0.44%  ret=   0.99%  trades=2
+  EURUSD=X       sharpe=-1.6196  dd=  -0.41%  ret=  -0.34%  trades=9
+  USDJPY=X       sharpe=-2.3732  dd=  -0.63%  ret=  -0.52%  trades=9
+  GBPUSD=X       sharpe=-0.1184  dd=  -0.64%  ret=  -0.04%  trades=15
+  AUDUSD=X       sharpe= 0.5071  dd=  -0.85%  ret=   0.34%  trades=22
+  USDCAD=X       sharpe=-3.7487  dd=  -0.85%  ret=  -0.85%  trades=4
+  USDCHF=X       sharpe=-0.4852  dd=  -0.69%  ret=  -0.17%  trades=10
+  NZDUSD=X       sharpe=-1.3342  dd=  -1.06%  ret=  -0.78%  trades=22
+  EURJPY=X       sharpe=-1.1334  dd=  -0.23%  ret=  -0.13%  trades=3
+  GC=F           sharpe= 1.8065  dd=  -1.87%  ret=   3.16%  trades=21
+  SI=F           sharpe= 2.5552  dd=  -4.22%  ret=   8.73%  trades=21
+  CL=F           sharpe= 3.5769  dd=  -4.58%  ret=  16.83%  trades=31
+  SPY            sharpe= 2.2988  dd=  -0.46%  ret=   0.33%  trades=1
+  QQQ            sharpe= 2.1204  dd=  -0.66%  ret=   0.47%  trades=1
+  ES=F           sharpe=  1.315  dd=  -1.45%  ret=   1.12%  trades=18
+  NQ=F           sharpe=  1.652  dd=  -1.98%  ret=   1.62%  trades=20
 ──────────────────────────────────────────────────
 
   [saved] /Users/dhanabordeemekintharanggur/Desktop/Projects/autoresearch/autoresearch-orb/results/apr5_020.json

@@ -26,6 +26,11 @@ OUTPUT_DIR = os.path.join(os.path.dirname(__file__), "backtest_plots")
 def run_and_plot(symbol: str, df: pd.DataFrame, use_test: bool = False) -> dict:
     """Run backtest for a single symbol and save interactive HTML plot."""
     train_df, test_df = split_train_test(df)
+
+    # If train split is empty (data < OOS window), use all data for training
+    if len(train_df) < 50:
+        train_df = df
+
     data = test_df if use_test else train_df
     label = "OOS" if use_test else "IS"
 
@@ -90,6 +95,10 @@ def main():
         df = df.rename(columns={"Open": "Open", "High": "High", "Low": "Low",
                                 "Close": "Close", "Volume": "Volume"})
         df = df[["Open", "High", "Low", "Close", "Volume"]].dropna()
+
+        # Strip timezone info (backtesting.py doesn't handle tz-aware indexes)
+        if hasattr(df.index, 'tz') and df.index.tz is not None:
+            df.index = df.index.tz_localize(None)
 
         if len(df) < 50:
             print(f"[SKIP] {sym}: insufficient data ({len(df)} rows)")
