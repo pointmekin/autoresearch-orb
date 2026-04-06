@@ -9,6 +9,10 @@ ORB Autoresearch is an autonomous overnight research loop for optimizing Opening
 
 The agent modifies `strategy.py`, runs the backtest across 15 instruments, checks if performance improved, keeps or discards the change, and repeats — indefinitely, without human supervision.
 
+ORB strategy optimization results
+
+<img width="2356" height="2618" alt="screencapture-file-Users-dhanabordeemekintharanggur-Desktop-Projects-autoresearch-autoresearch-orb-dashboard-html-2026-04-06-15_20_10" src="https://github.com/user-attachments/assets/20671955-a417-495b-81e6-998b548fe77a" />
+
 # How It Works
 
 The design follows Karpathy's autoresearch architecture exactly, adapted for trading strategy research instead of LLM training:
