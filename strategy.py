@@ -213,10 +213,10 @@ class ORBStrategy(Strategy):
         if not self.position:
             self._best_price = None
             if close > long_trigger:
-                self.buy(sl=close - sl_dist, tp=close + tp_dist)
+                self.buy(sl=self._range_low, tp=close + tp_dist)
                 self._trades_this_session += 1
             elif close < short_trigger:
-                self.sell(sl=close + sl_dist, tp=close - tp_dist)
+                self.sell(sl=self._range_high, tp=close - tp_dist)
                 self._trades_this_session += 1
 
 
