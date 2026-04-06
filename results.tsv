@@ -31,3 +31,20 @@ de03111	0.7050	-1.34	keep	SL=1.75x: fine-tuned, beats SL=2.0x, better DD and ret
 872c48d	0.7145	-1.35	keep	SL=1.8x: further fine-tune, marginal improvement over 1.75x
 7ad4748	0.6848	-1.37	discard	SL=1.85x: past optimum, SL=1.8x is the sweet spot
 ba08b5a	-131.884	-1.00	discard	30min window: USDCAD/EURJPY get 0 trades, too restrictive
+0c7e4bf	0.7145	-1.35	keep	restore best params (SL=1.8x, 1 trade/session) as apr6 baseline
+f866b5f	0.1281	-1.39	discard	breakeven stop at +0.5x: premature exits hurt win rate
+7f747d2	-266.9	-0.20	crash	London-only forex: PARAMS mutation bug — all symbols got London-only
+3e28227	-132.4	-1.06	discard	London-only forex: too few trades per pair (0-1 each), -999 Sharpe for USDCAD/EURJPY
+ad82903	-532.6	-0.18	crash	NY-only: killed commodity trades (London is primary for CL/SI/GC), forex got 0 trades
+b865d34	-132.5	-1.35	discard	0.15% threshold: USDCAD/EURJPY got 0 trades → -999 Sharpe, others worse
+6b3bdab	-131.884	-1.0	discard	tighter time window 6 bars (30min) after range: USDCAD/EURJPY got 0 trades
+3d67be7	-531.596	-0.96	discard	volume confirmation: killed all forex (0 trades), only commodities traded
+4ff7195	1.1231	-1.28	keep	trailing stop: activate at 0.5x range, trail at 0.3x — big Sharpe jump
+c761549	1.1231	-1.28	discard	tighter trail 0.2x: identical to 0.3x, no effect
+d0cc44d	1.1231	-1.28	discard	lower trail activation 0.3x: identical, trail not actually firing
+876bd1b	-199.597	-0.93	discard	breakout body 0.5x filter: too strict, killed USDCAD/EURJPY/QQQ
+f904549	0.933	-1.19	discard	SL at range midpoint: tighter stops = more stop-outs, worse than 1.8x range
+9dff1eb	1.0754	-1.26	discard	London longs-only: London shorts were helping, removing them hurt
+510419e	1.0302	-1.42	discard	TP=1.5x: higher return but worse Sharpe, more variance
+65d823b	0.8518	-1.4	discard	2 trades/session: over-trading hurt, 1 trade/session is optimal
+8747f65	1.1445	-1.27	keep	SL at range boundary (low/high) instead of 1.8x range height

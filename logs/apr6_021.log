@@ -1,0 +1,43 @@
+  [ERR]  EURUSD=X: 'Position' object has no attribute 'entry_price'
+  [ERR]  USDJPY=X: 'Position' object has no attribute 'entry_price'
+  [ERR]  GBPUSD=X: 'Position' object has no attribute 'entry_price'
+  [ERR]  AUDUSD=X: 'Position' object has no attribute 'entry_price'
+  [ERR]  USDCAD=X: 'Position' object has no attribute 'entry_price'
+  [ERR]  USDCHF=X: 'Position' object has no attribute 'entry_price'
+  [ERR]  NZDUSD=X: 'Position' object has no attribute 'entry_price'
+  [ERR]  EURJPY=X: 'Position' object has no attribute 'entry_price'
+  [ERR]  GC=F: 'Position' object has no attribute 'entry_price'
+  [ERR]  SI=F: 'Position' object has no attribute 'entry_price'
+  [ERR]  CL=F: 'Position' object has no attribute 'entry_price'
+  [ERR]  SPY: 'Position' object has no attribute 'entry_price'
+  [ERR]  QQQ: 'Position' object has no attribute 'entry_price'
+  [ERR]  ES=F: 'Position' object has no attribute 'entry_price'
+  [ERR]  NQ=F: 'Position' object has no attribute 'entry_price'
+
+──────────────────────────────────────────────────
+TAG:              apr6_021
+mean_sharpe:      -999.0
+median_sharpe:    -999.0
+mean_max_drawdown:-999.0%
+mean_total_return:-999.0%
+num_symbols:      15
+params:           {"opening_range_bars": 6, "breakout_threshold": 0.001, "stop_loss_range_multiple": 1.8, "take_profit_range_multiple": 1.0, "trailing_stop_activation": 0.5, "trailing_stop_distance": 0.3, "max_trades_per_session": 2, "min_range_pct": 0.0, "close_at_session_end": true, "allowed_weekdays": [1, 2, 3, 4], "sessions": [[8, 0, 12, 30], [13, 30, 20, 0]]}
+──────────────────────────────────────────────────
+  EURUSD=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  USDJPY=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  GBPUSD=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  AUDUSD=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  USDCAD=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  USDCHF=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  NZDUSD=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  EURJPY=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  GC=F           sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  SI=F           sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  CL=F           sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  SPY            sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  QQQ            sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  ES=F           sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  NQ=F           sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+──────────────────────────────────────────────────
+
+  [saved] /Users/dhanabordeemekintharanggur/Desktop/Projects/autoresearch/autoresearch-orb/results/apr6_021.json
