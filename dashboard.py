@@ -152,6 +152,18 @@ def generate_html(runs):
   </div>
 </div>
 
+<div class="chart-panel" id="wr-panel">
+  <div class="chart-label">
+    <span>mean_win_rate by iteration — click a bar to inspect</span>
+  </div>
+  <div class="chart-container" style="height:180px"><canvas id="wr-chart"></canvas></div>
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#66bb6a"></div>keep</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#3a3a3a"></div>discard</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#b71c1c"></div>crash</div>
+  </div>
+</div>
+
 <div id="detail-panel">
   <div id="detail-header">
     <span id="detail-tag"></span>
@@ -208,6 +220,10 @@ const sharpeColors = RUNS.map(r =>
 );
 const ddColors = RUNS.map(r =>
   r.status === 'keep' ? '#ff9800' :
+  r.status === 'crash' ? '#b71c1c' : '#3a3a3a'
+);
+const wrColors = RUNS.map(r =>
+  r.status === 'keep' ? '#66bb6a' :
   r.status === 'crash' ? '#b71c1c' : '#3a3a3a'
 );
 
@@ -397,6 +413,56 @@ hideNeg.addEventListener('change', () => {{
   sharpeChart.update();
 }});
 
+// --- Win rate chart ---
+const wrCtx = document.getElementById('wr-chart').getContext('2d');
+const wrChart = new Chart(wrCtx, {{
+  type: 'bar',
+  data: {{
+    labels,
+    datasets: [{{
+      label: 'mean_win_rate',
+      data: RUNS.map(r => r.mean_win_rate),
+      backgroundColor: wrColors,
+      borderWidth: 0,
+      borderRadius: 2,
+    }}]
+  }},
+  options: {{
+    responsive: true,
+    maintainAspectRatio: false,
+    onClick: (e, elements) => handleBarClick(wrChart, elements),
+    plugins: {{
+      legend: {{ display: false }},
+      tooltip: {{
+        callbacks: {{
+          title: (items) => labels[items[0].dataIndex],
+          label: (item) => {{
+            const r = RUNS[item.dataIndex];
+            const wr = r.mean_win_rate !== null ? (r.mean_win_rate * 100).toFixed(1) + '%' : '—';
+            const desc = r.description.length > 60 ? r.description.slice(0, 57) + '...' : r.description;
+            return ['win rate: ' + wr, desc];
+          }}
+        }},
+        backgroundColor: '#1a1a2e',
+        titleColor: '#e0e0ff',
+        bodyColor: '#888',
+        borderColor: '#333',
+        borderWidth: 1,
+        padding: 10,
+      }}
+    }},
+    scales: {{
+      x: {{ grid: {{ display: false }}, ticks: {{ color: '#444', maxRotation: 60, font: {{ size: 9 }} }} }},
+      y: {{
+        grid: {{ color: '#1a1a1a' }},
+        ticks: {{ color: '#555', font: {{ size: 10 }}, callback: v => (v * 100).toFixed(0) + '%' }},
+        border: {{ dash: [2, 2] }},
+        suggestedMin: 0, suggestedMax: 1
+      }}
+    }}
+  }}
+}});
+
 // --- Metric tab switching ---
 document.querySelectorAll('.metric-tab').forEach(tab => {{
   tab.addEventListener('click', () => {{
@@ -522,9 +588,13 @@ def main():
         if sym_data:
             run['mean_total_return'] = sym_data['mean_total_return']
             run['symbols'] = sym_data['symbols']
+            wr_vals = [s['win_rate'] for s in sym_data['symbols'].values()
+                       if s.get('win_rate') is not None]
+            run['mean_win_rate'] = sum(wr_vals) / len(wr_vals) if wr_vals else None
         else:
             run['mean_total_return'] = None
             run['symbols'] = None
+            run['mean_win_rate'] = None
 
     html = generate_html(runs)
     output_path.write_text(html, encoding='utf-8')
