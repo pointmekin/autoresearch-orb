@@ -51,6 +51,12 @@ PARAMS = {
     # Take profit as fraction of the opening range height.
     "take_profit_range_multiple": 1.0,
 
+    # Trailing stop: activate after price moves this fraction of range in favor
+    "trailing_stop_activation": 0.5,
+
+    # Trailing stop distance as fraction of range height
+    "trailing_stop_distance": 0.3,
+
     # Maximum number of trades per session per symbol (0 = unlimited)
     "max_trades_per_session": 1,
 
@@ -103,6 +109,8 @@ class ORBStrategy(Strategy):
     max_trades_per_session     = PARAMS["max_trades_per_session"]
     min_range_pct              = PARAMS["min_range_pct"]
     close_at_session_end       = PARAMS["close_at_session_end"]
+    trailing_stop_activation   = PARAMS["trailing_stop_activation"]
+    trailing_stop_distance     = PARAMS["trailing_stop_distance"]
 
     def init(self):
         self._active_session   = None   # (start_h, start_m) key
@@ -111,6 +119,7 @@ class ORBStrategy(Strategy):
         self._range_low        = None
         self._range_set        = False
         self._trades_this_session = 0
+        self._best_price       = None  # track best price for trailing stop
 
     def next(self):
         current_time = self.data.index[-1]
@@ -173,8 +182,28 @@ class ORBStrategy(Strategy):
         if bars_since_range > 12:
             return
 
+        # ── Trailing stop management ──────────────────────────────────────
+        close = self.data.Close[-1]
+        if self.position:
+            trail_dist = range_height * self.trailing_stop_distance
+            activation_dist = range_height * self.trailing_stop_activation
+            if self.position.is_long:
+                if close - self.position.entry_price >= activation_dist:
+                    new_sl = close - trail_dist
+                    if self._best_price is None or close > self._best_price:
+                        self._best_price = close
+                    new_sl = max(self._best_price - trail_dist, self.position.sl or 0)
+                    if new_sl > (self.position.sl or 0):
+                        self.position.sl = new_sl
+            else:
+                if self.position.entry_price - close >= activation_dist:
+                    if self._best_price is None or close < self._best_price:
+                        self._best_price = close
+                    new_sl = min(self._best_price + trail_dist, self.position.sl or float('inf'))
+                    if new_sl < (self.position.sl or float('inf')):
+                        self.position.sl = new_sl
+
         # ── Entry signals ─────────────────────────────────────────────────
-        close     = self.data.Close[-1]
         sl_dist   = range_height * self.stop_loss_range_multiple
         tp_dist   = range_height * self.take_profit_range_multiple
 
@@ -182,6 +211,7 @@ class ORBStrategy(Strategy):
         short_trigger = self._range_low  * (1 - self.breakout_threshold)
 
         if not self.position:
+            self._best_price = None
             if close > long_trigger:
                 self.buy(sl=close - sl_dist, tp=close + tp_dist)
                 self._trades_this_session += 1
@@ -253,7 +283,6 @@ def run_experiment(tag: str, params: dict = None, optimize: bool = False):
                 cash=100_000,
                 commission=0.0002,   # 2 bps (realistic for forex/CFD)
                 exclusive_orders=True,
-                finalize_trades=True,
             )
 
             if optimize:
