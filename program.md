@@ -28,7 +28,7 @@ To begin a new research run, work with the user to:
    - `strategy.py` — the ORB strategy file. **This is the only file you modify.**
 4. **Ensure backtest window is full 60 days**: Before the first experiment run, update `BACKTEST_END` in `prepare.py` to today's date and `BACKTEST_START` to ~60 days prior. Then run `python prepare.py` with `force_refresh=True` to download fresh data covering the full window. This gives you ~60 trading days of 5-minute bars — enough to evaluate strategy performance across multiple weeks and market conditions.
 5. **Verify data exists**: Check that the `data/` directory contains `.parquet` files with data spanning the full 60-day window. If data is stale or missing, re-run `python prepare.py`.
-6. **Initialize results.tsv**: Create `results.tsv` with just the header row (see format below).
+6. **Initialize results.tsv**: If `results.tsv` does not exist, create it with just the header row (see format below). If it already exists, do NOT overwrite it — append new runs to the existing file to preserve the full history across sessions.
 7. **Confirm and go**.
 
 ---
