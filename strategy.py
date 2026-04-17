@@ -52,10 +52,10 @@ PARAMS = {
     "take_profit_range_multiple": 1.0,
 
     # Trailing stop: activate after price moves this fraction of range in favor
-    "trailing_stop_activation": 99.0,
+    "trailing_stop_activation": 0.5,
 
     # Trailing stop distance as fraction of range height
-    "trailing_stop_distance": 99.0,
+    "trailing_stop_distance": 0.3,
 
     # Maximum number of trades per session per symbol (0 = unlimited)
     "max_trades_per_session": 1,
@@ -212,11 +212,15 @@ class ORBStrategy(Strategy):
 
         if not self.position:
             self._best_price = None
+            range_mid = (self._range_high + self._range_low) / 2
+            narrow_range = range_height / range_mid < 0.003
+            long_sl = range_mid if narrow_range else self._range_low
+            short_sl = range_mid if narrow_range else self._range_high
             if close > long_trigger:
-                self.buy(sl=self._range_low, tp=close + tp_dist)
+                self.buy(sl=long_sl, tp=close + tp_dist)
                 self._trades_this_session += 1
             elif close < short_trigger:
-                self.sell(sl=self._range_high, tp=close - tp_dist)
+                self.sell(sl=short_sl, tp=close - tp_dist)
                 self._trades_this_session += 1
 
 
