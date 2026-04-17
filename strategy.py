@@ -217,7 +217,8 @@ class ORBStrategy(Strategy):
             long_sl = range_mid if narrow_range else self._range_low
             short_sl = range_mid if narrow_range else self._range_high
             is_london = sess_key == (8, 0)
-            if close > long_trigger:
+            is_ny = sess_key == (13, 30)
+            if close > long_trigger and not (is_ny and narrow_range):
                 self.buy(sl=long_sl, tp=close + tp_dist)
                 self._trades_this_session += 1
             elif close < short_trigger and not (is_london and narrow_range):
