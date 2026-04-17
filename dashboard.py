@@ -1,16 +1,11 @@
 import csv
 import json
-import os
 import pathlib
 import webbrowser
 
 
 def parse_tsv(path):
-    """Read results.tsv and return a list of run dicts.
-
-    Handles both 6-column (new: tag+commit+...) and 5-column (old: commit+...)
-    formats. Numeric fields mean_sharpe and mean_max_dd are cast to float.
-    """
+    """Read results.tsv and return a list of run dicts."""
     runs = []
     with open(path, newline="", encoding="utf-8") as f:
         reader = csv.DictReader(f, delimiter="\t")
@@ -29,11 +24,7 @@ def parse_tsv(path):
 
 
 def load_symbol_data(tag, results_dir="results"):
-    """Load per-symbol data from results/<tag>.json.
-
-    Returns None if the file does not exist or tag is empty.
-    Returns a dict with keys: mean_total_return (float or None), symbols (dict).
-    """
+    """Load per-symbol data from results/<tag>.json."""
     if not tag:
         return None
     path = pathlib.Path(results_dir) / f"{tag}.json"
@@ -55,209 +46,262 @@ def generate_html(runs):
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ORB Autoresearch — Results</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>ORB Autoresearch</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <style>
+  :root {{
+    --bg: #07070a; --surface: #0f0f14; --hi: #17171f;
+    --border: #1c1c28; --text: #b0b0be; --muted: #484858; --dim: #28283a;
+    --accent: #4fc3f7; --dd: #ff9800; --wr: #66bb6a;
+    --font: 'IBM Plex Mono', 'Courier New', monospace;
+  }}
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   html {{ overflow-x: hidden; }}
   html, body {{ height: 100%; overflow-y: hidden; }}
-  body {{ background: #0d0d0d; color: #ccc; font-family: 'Courier New', monospace;
-          padding: 12px; display: flex; flex-direction: column; gap: 10px; }}
-  #header {{ display: flex; justify-content: space-between; align-items: center;
-             background: #1a1a2e; padding: 10px 14px; border-radius: 6px;
-             flex-shrink: 0; }}
-  #header .title {{ color: #e0e0ff; font-size: 12px; font-weight: bold; letter-spacing: 1px; }}
-  #header .meta {{ color: #555; font-size: 10px; }}
-  #layout {{ flex: 1; display: grid; grid-template-columns: 1.5fr 1fr; gap: 10px; min-height: 0; }}
-  #chart-col {{ display: flex; flex-direction: column; gap: 8px; min-height: 0; }}
-  #chart-panel {{ background: #111; border: 1px solid #222; border-radius: 6px;
-                  padding: 12px; flex: 1; display: flex; flex-direction: column; min-height: 0; }}
-  #chart-toolbar {{ display: flex; justify-content: space-between; align-items: center;
-                    margin-bottom: 10px; flex-shrink: 0; }}
-  .chart-tabs {{ display: flex; gap: 2px; }}
-  .chart-tab {{ padding: 3px 10px; border-radius: 3px; font-size: 9px;
-                text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
-                background: #0d0d0d; color: #444; border: none; font-family: inherit;
-                transition: all 0.15s; }}
-  .chart-tab:hover {{ color: #888; }}
-  .chart-tab.active {{ background: #1a1a2e; color: #e0e0ff; }}
-  #hide-neg-label {{ display: flex; align-items: center; gap: 5px; cursor: pointer;
-                     font-size: 9px; color: #555; text-transform: uppercase;
-                     letter-spacing: 0.5px; }}
-  #hide-neg {{ cursor: pointer; accent-color: #4fc3f7; }}
-  .chart-container {{ position: relative; flex: 1; min-height: 0;
-                      overflow-x: auto; overflow-y: hidden; }}
-  #chart-scroll {{ position: relative; }}
-  #chart-footer {{ display: flex; justify-content: space-between; align-items: center;
-                   margin-top: 8px; flex-shrink: 0; }}
-  .legend {{ display: flex; gap: 14px; }}
-  .legend-item {{ display: flex; align-items: center; gap: 5px; font-size: 9px; color: #444; }}
-  .legend-dot {{ width: 9px; height: 9px; border-radius: 2px; }}
-  #right-col {{ display: flex; flex-direction: column; min-height: 0; overflow-y: auto; }}
-  #detail-panel {{ background: #111; border: 1px solid #222; border-radius: 6px;
-                   padding: 14px; flex: 1; display: flex; flex-direction: column; gap: 10px; }}
-  #nav-controls {{ display: flex; align-items: center; gap: 6px; flex-shrink: 0; }}
-  #nav-prev, #nav-next {{ background: #0d0d0d; border: 1px solid #2a2a2a; color: #555;
-                           font-family: inherit; font-size: 11px; padding: 3px 8px;
-                           border-radius: 3px; cursor: pointer; line-height: 1;
-                           transition: all 0.15s; }}
-  #nav-prev:hover, #nav-next:hover {{ color: #aaa; border-color: #444; }}
-  #nav-prev:disabled, #nav-next:disabled {{ opacity: 0.2; cursor: default; }}
-  #nav-pos {{ font-size: 10px; color: #444; flex: 1; text-align: center; }}
-  #detail-placeholder {{ color: #2a2a2a; text-align: center; padding: 40px 0;
-                          font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }}
-  #detail-content {{ display: none; flex: 1; overflow-y: auto; }}
-  #best-so-far {{ font-size: 9px; color: #444; text-transform: uppercase; letter-spacing: 0.5px;
-                  padding: 5px 8px; background: #0d0d0d; border-radius: 3px;
-                  margin-bottom: 10px; display: flex; gap: 6px; align-items: center; }}
-  #best-so-far .bsf-val {{ color: #4fc3f7; }}
-  #detail-header {{ display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }}
-  #detail-tag {{ font-size: 11px; color: #888; }}
-  #detail-commit {{ font-size: 10px; color: #444; }}
-  .badge {{ padding: 2px 7px; border-radius: 3px; font-size: 9px;
-            text-transform: uppercase; letter-spacing: 0.5px; }}
-  .badge-keep {{ background: #1a3a1a; color: #66bb6a; }}
-  .badge-discard {{ background: #2a2a2a; color: #666; }}
-  .badge-crash {{ background: #3a1a1a; color: #ef5350; }}
-  #detail-desc {{ font-size: 11px; color: #aaa; margin-bottom: 12px;
-                  line-height: 1.5; border-left: 2px solid #222; padding-left: 8px; }}
-  .metrics-row {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-bottom: 14px; }}
-  .metric-box {{ background: #0d0d0d; border-radius: 4px; padding: 8px; text-align: center; }}
-  .metric-val {{ font-size: 16px; }}
-  .metric-val.pos {{ color: #4fc3f7; }}
-  .metric-val.neg {{ color: #ef5350; }}
-  .metric-val.neutral {{ color: #888; }}
-  .metric-val.warn {{ color: #ff9800; }}
-  .metric-label {{ font-size: 8px; color: #444; text-transform: uppercase;
-                   letter-spacing: 0.5px; margin-top: 3px; }}
-  #symbols-section {{ display: none; }}
-  .symbols-header {{ display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }}
-  .symbol-tabs {{ display: flex; gap: 2px; }}
-  .symbol-tab {{ padding: 3px 10px; border-radius: 3px; font-size: 9px;
-                 text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
-                 background: #0d0d0d; color: #444; border: none; font-family: inherit;
-                 transition: all 0.15s; }}
-  .symbol-tab:hover {{ color: #888; }}
-  .symbol-tab.active {{ background: #1a1a2e; color: #e0e0ff; }}
-  .symbol-row {{ display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }}
-  .symbol-name {{ font-size: 10px; color: #555; width: 72px; flex-shrink: 0; }}
-  .symbol-bar-bg {{ flex: 1; height: 10px; background: #0d0d0d; border-radius: 2px; overflow: hidden; }}
-  .symbol-bar-fill {{ height: 100%; border-radius: 2px; transition: width 0.2s; }}
-  .symbol-bar-fill.pos {{ background: #4fc3f7; }}
-  .symbol-bar-fill.neg {{ background: #ef5350; }}
-  .symbol-bar-fill.warn {{ background: #ff9800; }}
-  .symbol-val {{ font-size: 10px; width: 50px; text-align: right; }}
-  .symbol-val.pos {{ color: #4fc3f7; }}
-  .symbol-val.neg {{ color: #ef5350; }}
-  .symbol-val.warn {{ color: #ff9800; }}
+  body {{ background: var(--bg); color: var(--text); font-family: var(--font);
+          padding: 10px; display: flex; flex-direction: column; gap: 8px; }}
 
+  /* Header */
+  #header {{
+    display: flex; justify-content: space-between; align-items: center;
+    background: var(--hi); padding: 10px 14px; border-radius: 6px;
+    border: 1px solid var(--border); flex-shrink: 0;
+  }}
+  .title {{ color: #e0e0f0; font-size: 11px; font-weight: 600; letter-spacing: 1.5px; }}
+  .meta {{ color: var(--muted); font-size: 10px; }}
+
+  /* Grid layout */
+  #layout {{ flex: 1; display: grid; grid-template-columns: 1.5fr 1fr; gap: 8px; min-height: 0; }}
+
+  /* Chart panel */
+  #chart-panel {{
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px; display: flex; flex-direction: column; min-height: 0; overflow: hidden;
+  }}
+  #chart-toolbar {{
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px; flex-shrink: 0;
+  }}
+  .tabs {{ display: flex; gap: 2px; }}
+  .tab {{
+    padding: 4px 10px; border-radius: 3px; font-size: 9px;
+    text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer;
+    background: var(--bg); color: var(--muted); border: none; font-family: var(--font);
+    transition: all 0.15s;
+  }}
+  .tab:hover {{ color: var(--text); }}
+  .tab.active {{ background: var(--hi); color: #e0e0f0; }}
+  #hide-neg-label {{
+    display: flex; align-items: center; gap: 5px; cursor: pointer;
+    font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
+  }}
+  #hide-neg {{ cursor: pointer; accent-color: var(--accent); }}
+
+  /* Chart scroll area */
+  .chart-wrap {{
+    flex: 1; min-height: 0; position: relative;
+    overflow-x: auto; overflow-y: hidden;
+  }}
+  .chart-wrap::-webkit-scrollbar {{ height: 3px; }}
+  .chart-wrap::-webkit-scrollbar-track {{ background: var(--bg); }}
+  .chart-wrap::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 2px; }}
+  #chart-inner {{ height: 100%; min-width: 100%; }}
+
+  /* Legend */
+  #chart-footer {{ display: flex; margin-top: 6px; flex-shrink: 0; }}
+  .legend {{ display: flex; gap: 14px; }}
+  .legend-item {{ display: flex; align-items: center; gap: 5px; font-size: 9px; color: var(--muted); }}
+  .legend-dot {{ width: 8px; height: 8px; border-radius: 2px; }}
+
+  /* Right column */
+  #right-col {{
+    display: flex; flex-direction: column; min-height: 0; overflow-y: auto;
+  }}
+  #right-col::-webkit-scrollbar {{ width: 3px; }}
+  #right-col::-webkit-scrollbar-track {{ background: transparent; }}
+  #right-col::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 2px; }}
+  #detail-panel {{
+    background: var(--surface); border: 1px solid var(--border); border-radius: 6px;
+    padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 8px;
+  }}
+
+  /* Nav */
+  #nav {{ display: flex; align-items: center; gap: 6px; flex-shrink: 0; }}
+  #nav button {{
+    background: var(--bg); border: 1px solid var(--border); color: var(--muted);
+    font-family: var(--font); font-size: 12px; padding: 4px 10px;
+    border-radius: 3px; cursor: pointer; line-height: 1; transition: all 0.15s;
+  }}
+  #nav button:hover {{ color: var(--text); border-color: var(--muted); }}
+  #nav button:disabled {{ opacity: 0.2; cursor: default; }}
+  #nav-pos {{ font-size: 10px; color: var(--muted); flex: 1; text-align: center; }}
+
+  /* Placeholder */
+  #placeholder {{
+    color: var(--dim); text-align: center; padding: 40px 0;
+    font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+  }}
+  #detail {{ display: none; flex: 1; overflow-y: auto; }}
+
+  /* Best-so-far strip */
+  #bsf {{
+    font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px;
+    padding: 5px 8px; background: var(--bg); border-radius: 3px;
+    margin-bottom: 8px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+  }}
+  .bsf-v {{ color: var(--accent); }}
+
+  /* Detail header */
+  #d-head {{ display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap; }}
+  #d-tag {{ font-size: 11px; color: var(--muted); }}
+  #d-commit {{ font-size: 10px; color: var(--dim); }}
+  .badge {{ padding: 2px 7px; border-radius: 3px; font-size: 9px; text-transform: uppercase; letter-spacing: 0.5px; }}
+  .badge-keep {{ background: #0f2a0f; color: #66bb6a; }}
+  .badge-discard {{ background: #1a1a22; color: #666; }}
+  .badge-crash {{ background: #2a0f0f; color: #ef5350; }}
+  #d-desc {{
+    font-size: 11px; color: #8888a0; margin-bottom: 10px;
+    line-height: 1.5; border-left: 2px solid var(--border); padding-left: 8px;
+  }}
+
+  /* Metrics */
+  .metrics {{ display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; margin-bottom: 12px; }}
+  .m-box {{ background: var(--bg); border-radius: 4px; padding: 8px; text-align: center; }}
+  .m-val {{ font-size: 15px; font-weight: 500; }}
+  .m-val.pos {{ color: var(--accent); }}
+  .m-val.neg {{ color: #ef5350; }}
+  .m-val.neutral {{ color: var(--muted); }}
+  .m-val.warn {{ color: var(--dd); }}
+  .m-lbl {{ font-size: 8px; color: var(--dim); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 2px; }}
+
+  /* Symbols */
+  #sym-section {{ display: none; }}
+  .sym-row {{ display: flex; align-items: center; gap: 8px; margin-bottom: 3px; }}
+  .sym-name {{ font-size: 10px; color: var(--muted); width: 68px; flex-shrink: 0; }}
+  .sym-bg {{ flex: 1; height: 10px; background: var(--bg); border-radius: 2px; overflow: hidden; }}
+  .sym-fill {{ height: 100%; border-radius: 2px; transition: width 0.2s; }}
+  .sym-fill.pos {{ background: var(--accent); }}
+  .sym-fill.neg {{ background: #ef5350; }}
+  .sym-fill.warn {{ background: var(--dd); }}
+  .sym-val {{ font-size: 10px; width: 48px; text-align: right; }}
+  .sym-val.pos {{ color: var(--accent); }}
+  .sym-val.neg {{ color: #ef5350; }}
+  .sym-val.warn {{ color: var(--dd); }}
+
+  /* Mobile */
   @media (max-width: 768px) {{
+    html {{ overflow-x: hidden; }}
     html, body {{ height: auto; overflow-y: auto; }}
-    body {{ padding: 8px; gap: 8px; }}
-    #header {{ flex-direction: column; align-items: flex-start; gap: 3px; padding: 10px 12px; }}
-    #header .title {{ font-size: 11px; }}
-    #header .meta {{ font-size: 10px; }}
+    body {{ padding: 0; gap: 0; }}
+    #header {{
+      border-radius: 0; border-left: none; border-right: none; border-top: none;
+      padding: 10px 12px; flex-direction: column; align-items: flex-start; gap: 2px;
+    }}
+    .title {{ font-size: 10px; }}
+    .meta {{ font-size: 9px; }}
     #layout {{ grid-template-columns: 1fr; flex: none; height: auto; min-height: 0; }}
-    #chart-col {{ gap: 0; }}
-    #chart-panel {{ flex: none; height: 52vw; min-height: 240px; border-radius: 6px 6px 0 0;
-                    border-bottom: none; padding: 10px 10px 8px; }}
-    #chart-toolbar {{ margin-bottom: 8px; }}
-    .chart-tab {{ padding: 5px 10px; font-size: 9px; }}
-    .chart-container {{ min-height: 0; }}
-    #chart-footer {{ margin-top: 6px; }}
-    #right-col {{ overflow-y: visible; border-radius: 0 0 6px 6px; }}
-    #detail-panel {{ flex: none; border-radius: 0 0 6px 6px; border-top: none;
-                     border-color: #222; padding: 12px; gap: 8px; }}
-    #detail-content {{ overflow-y: visible; flex: none; }}
-    #nav-prev, #nav-next {{ padding: 8px 16px; font-size: 14px; min-width: 44px;
-                             min-height: 36px; }}
-    #nav-pos {{ font-size: 11px; }}
-    #detail-desc {{ font-size: 11px; }}
-    .metric-val {{ font-size: 15px; }}
-    .metrics-row {{ gap: 5px; margin-bottom: 12px; }}
-    .metric-box {{ padding: 8px 4px; }}
-    .symbol-name {{ width: 60px; }}
-    .symbol-val {{ width: 46px; }}
-    .symbol-tab, .chart-tab {{ padding: 5px 10px; }}
-    #best-so-far {{ flex-wrap: wrap; font-size: 9px; }}
-    #detail-placeholder {{ padding: 28px 0; }}
+    #chart-panel {{
+      border-radius: 0; border-left: none; border-right: none;
+      flex: none; height: 46vh; min-height: 230px; max-height: 360px;
+      padding: 8px 8px 6px;
+    }}
+    .tab {{ padding: 6px 12px; font-size: 10px; }}
+    #chart-footer {{ margin-top: 4px; }}
+    #right-col {{ overflow-y: visible; }}
+    #detail-panel {{
+      border-radius: 0 0 6px 6px;
+      border-top: none; border-left: none; border-right: none;
+      padding: 10px; gap: 8px;
+    }}
+    #detail {{ overflow-y: visible; flex: none; }}
+    #nav button {{ padding: 10px 20px; font-size: 16px; min-width: 48px; min-height: 44px; }}
+    #nav-pos {{ font-size: 12px; }}
+    .m-val {{ font-size: 14px; }}
+    .metrics {{ gap: 4px; margin-bottom: 10px; }}
+    .m-box {{ padding: 6px 4px; }}
+    .sym-name {{ width: 56px; font-size: 11px; }}
+    .sym-val {{ width: 44px; font-size: 11px; }}
+    #d-desc {{ font-size: 12px; margin-bottom: 8px; }}
+    #placeholder {{ padding: 24px 0; }}
   }}
 </style>
 </head>
 <body>
 
 <div id="header">
-  <span class="title">ORB AUTORESEARCH — RESULTS</span>
+  <span class="title">ORB AUTORESEARCH</span>
   <span class="meta" id="header-meta"></span>
 </div>
 
 <div id="layout">
-  <div id="chart-col">
-    <div id="chart-panel">
-      <div id="chart-toolbar">
-        <div class="chart-tabs">
-          <button class="chart-tab active" data-chart="sharpe">sharpe</button>
-          <button class="chart-tab" data-chart="dd">drawdown</button>
-          <button class="chart-tab" data-chart="winrate">win rate</button>
-        </div>
-        <label id="hide-neg-label">
-          <input type="checkbox" id="hide-neg" checked> hide negative
-        </label>
+  <div id="chart-panel">
+    <div id="chart-toolbar">
+      <div class="tabs" id="chart-tabs">
+        <button class="tab active" data-chart="sharpe">sharpe</button>
+        <button class="tab" data-chart="dd">drawdown</button>
+        <button class="tab" data-chart="winrate">win rate</button>
       </div>
-      <div class="chart-container"><div id="chart-scroll"><canvas id="main-chart"></canvas></div></div>
-      <div id="chart-footer">
-        <div class="legend">
-          <div class="legend-item"><div class="legend-dot" id="legend-keep-dot"></div>keep</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#3a3a3a"></div>discard</div>
-          <div class="legend-item"><div class="legend-dot" style="background:#b71c1c"></div>crash</div>
-        </div>
+      <label id="hide-neg-label">
+        <input type="checkbox" id="hide-neg" checked> hide negative
+      </label>
+    </div>
+    <div class="chart-wrap">
+      <div id="chart-inner"><canvas id="chart"></canvas></div>
+    </div>
+    <div id="chart-footer">
+      <div class="legend">
+        <div class="legend-item"><div class="legend-dot" id="leg-keep"></div>keep</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#2a2a34"></div>discard</div>
+        <div class="legend-item"><div class="legend-dot" style="background:#b71c1c"></div>crash</div>
       </div>
     </div>
   </div>
 
   <div id="right-col">
     <div id="detail-panel">
-      <div id="nav-controls">
-        <button id="nav-prev" disabled>&#8592;</button>
-        <span id="nav-pos">— / —</span>
-        <button id="nav-next" disabled>&#8594;</button>
+      <div id="nav">
+        <button id="nav-prev" disabled>&larr;</button>
+        <span id="nav-pos">&mdash; / &mdash;</span>
+        <button id="nav-next" disabled>&rarr;</button>
       </div>
-      <div id="detail-placeholder">click a bar or use arrow keys</div>
-      <div id="detail-content">
-        <div id="best-so-far">
-          best so far: <span id="bsf-tag" class="bsf-val">—</span>
-          &nbsp;·&nbsp; sharpe <span id="bsf-sharpe" class="bsf-val">—</span>
+      <div id="placeholder">click a bar or use arrow keys</div>
+      <div id="detail">
+        <div id="bsf">
+          best so far: <span id="bsf-tag" class="bsf-v">&mdash;</span>
+          &nbsp;&middot;&nbsp; sharpe <span id="bsf-sharpe" class="bsf-v">&mdash;</span>
         </div>
-        <div id="detail-header">
-          <span id="detail-tag"></span>
-          <span id="detail-badge" class="badge"></span>
-          <span id="detail-commit"></span>
+        <div id="d-head">
+          <span id="d-tag"></span>
+          <span id="d-badge" class="badge"></span>
+          <span id="d-commit"></span>
         </div>
-        <div id="detail-desc"></div>
-        <div class="metrics-row">
-          <div class="metric-box">
-            <div class="metric-val" id="m-sharpe"></div>
-            <div class="metric-label">mean sharpe</div>
+        <div id="d-desc"></div>
+        <div class="metrics">
+          <div class="m-box">
+            <div class="m-val" id="m-sharpe"></div>
+            <div class="m-lbl">mean sharpe</div>
           </div>
-          <div class="metric-box">
-            <div class="metric-val" id="m-dd"></div>
-            <div class="metric-label">mean max dd</div>
+          <div class="m-box">
+            <div class="m-val" id="m-dd"></div>
+            <div class="m-lbl">mean max dd</div>
           </div>
-          <div class="metric-box">
-            <div class="metric-val" id="m-return"></div>
-            <div class="metric-label">mean return %</div>
+          <div class="m-box">
+            <div class="m-val" id="m-ret"></div>
+            <div class="m-lbl">mean return %</div>
           </div>
         </div>
-        <div id="symbols-section">
-          <div class="symbols-header">
-            <div class="symbol-tabs">
-              <button class="symbol-tab active" data-metric="sharpe">sharpe</button>
-              <button class="symbol-tab" data-metric="dd">drawdown</button>
-              <button class="symbol-tab" data-metric="return">return</button>
+        <div id="sym-section">
+          <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+            <div class="tabs" id="sym-tabs">
+              <button class="tab active" data-metric="sharpe">sharpe</button>
+              <button class="tab" data-metric="dd">drawdown</button>
+              <button class="tab" data-metric="return">return</button>
             </div>
           </div>
-          <div id="symbols-list"></div>
+          <div id="sym-list"></div>
         </div>
       </div>
     </div>
@@ -266,366 +310,259 @@ def generate_html(runs):
 
 <script>
 const RUNS = {runs_json};
-let chartMetric = 'sharpe';
-let symbolMetric = 'sharpe';
-let selectedIndex = null;
-let selectedRun = null;
+let chartMetric = 'sharpe', symMetric = 'sharpe';
+let selIdx = null, selRun = null;
 
-// Header meta
-const total = RUNS.length;
+// Header
 const best = Math.max(...RUNS.map(r => r.mean_sharpe));
-const bestDD = Math.min(...RUNS.map(r => r.mean_max_dd));
+const worstDD = Math.min(...RUNS.map(r => r.mean_max_dd));
 document.getElementById('header-meta').textContent =
-  total + ' runs · best sharpe: ' + best.toFixed(4) + ' · worst dd: ' + bestDD.toFixed(2) + '%';
+  RUNS.length + ' runs · best sharpe ' + best.toFixed(4) + ' · worst dd ' + worstDD.toFixed(2) + '%';
 
 const labels = RUNS.map((r, i) => r.tag || ('#' + (i + 1)));
 const hideNeg = document.getElementById('hide-neg');
 
-// Compression helpers
-function compressSharpe(v) {{
-  return v >= 0 ? v : -Math.pow(Math.abs(v), 0.5);
-}}
-function compressDD(v) {{
-  return v >= 0 ? v : -Math.sqrt(Math.abs(v));
-}}
+// Compression
+const cs = v => v >= 0 ? v : -Math.pow(Math.abs(v), 0.5);
+const cd = v => v >= 0 ? v : -Math.sqrt(Math.abs(v));
+const trunc = d => d.length > 60 ? d.slice(0, 57) + '...' : d;
 
 // Per-metric config
-const METRIC_CONFIG = {{
+const MC = {{
   sharpe: {{
-    keepColor: '#4fc3f7',
-    barData: () => RUNS.map(r =>
-      (!hideNeg.checked || r.mean_sharpe >= 0) ? compressSharpe(r.mean_sharpe) : null),
-    lineData: () => RUNS.map(r =>
-      (r.status === 'keep' && (!hideNeg.checked || r.mean_sharpe >= 0))
-        ? compressSharpe(r.mean_sharpe) : null),
+    color: '#4fc3f7',
+    bars: () => RUNS.map(r => (!hideNeg.checked || r.mean_sharpe >= 0) ? cs(r.mean_sharpe) : null),
+    line: () => RUNS.map(r => (r.status === 'keep' && (!hideNeg.checked || r.mean_sharpe >= 0)) ? cs(r.mean_sharpe) : null),
     yTick: v => v >= 0 ? v.toFixed(2) : (-Math.pow(Math.abs(v), 2)).toFixed(1),
-    tooltip: (r) => ['sharpe: ' + r.mean_sharpe.toFixed(4), truncDesc(r.description)],
-    yOpts: {{}},
+    tip: r => ['sharpe: ' + r.mean_sharpe.toFixed(4), trunc(r.description)],
   }},
   dd: {{
-    keepColor: '#ff9800',
-    barData: () => RUNS.map(r => compressDD(r.mean_max_dd)),
-    lineData: () => RUNS.map(() => null),
+    color: '#ff9800',
+    bars: () => RUNS.map(r => cd(r.mean_max_dd)),
+    line: () => RUNS.map(() => null),
     yTick: v => v >= 0 ? v.toFixed(1) + '%' : (-Math.pow(Math.abs(v), 2)).toFixed(1) + '%',
-    tooltip: (r) => ['max dd: ' + r.mean_max_dd.toFixed(2) + '%', truncDesc(r.description)],
-    yOpts: {{}},
+    tip: r => ['max dd: ' + r.mean_max_dd.toFixed(2) + '%', trunc(r.description)],
   }},
   winrate: {{
-    keepColor: '#66bb6a',
-    barData: () => RUNS.map(r => r.mean_win_rate),
-    lineData: () => RUNS.map(() => null),
+    color: '#66bb6a',
+    bars: () => RUNS.map(r => r.mean_win_rate),
+    line: () => RUNS.map(() => null),
     yTick: v => (v * 100).toFixed(0) + '%',
-    tooltip: (r) => [
-      'win rate: ' + (r.mean_win_rate !== null ? (r.mean_win_rate * 100).toFixed(1) + '%' : '—'),
-      truncDesc(r.description),
-    ],
-    yOpts: {{ suggestedMin: 0, suggestedMax: 1 }},
+    tip: r => ['win rate: ' + (r.mean_win_rate !== null ? (r.mean_win_rate * 100).toFixed(1) + '%' : '—'), trunc(r.description)],
   }},
 }};
 
-function truncDesc(d) {{
-  return d.length > 60 ? d.slice(0, 57) + '...' : d;
+function colors(m) {{
+  const k = MC[m].color;
+  return RUNS.map(r => r.status === 'keep' ? k : r.status === 'crash' ? '#b71c1c' : '#2a2a34');
 }}
 
-function getColors(metric) {{
-  const keep = METRIC_CONFIG[metric].keepColor;
-  return RUNS.map(r =>
-    r.status === 'keep' ? keep :
-    r.status === 'crash' ? '#b71c1c' : '#3a3a3a'
-  );
-}}
-
-// Zero reference line plugin
+// Zero-line plugin
 Chart.register({{
-  id: 'zeroline',
-  afterDraw(chart) {{
-    const y0 = chart.scales.y.getPixelForValue(0);
-    if (y0 < chart.chartArea.top || y0 > chart.chartArea.bottom) return;
-    const ctx = chart.ctx;
-    ctx.save();
-    ctx.beginPath();
-    ctx.setLineDash([4, 4]);
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 1;
-    ctx.moveTo(chart.chartArea.left, y0);
-    ctx.lineTo(chart.chartArea.right, y0);
-    ctx.stroke();
-    ctx.restore();
+  id: 'z',
+  afterDraw(c) {{
+    const y0 = c.scales.y.getPixelForValue(0);
+    if (y0 < c.chartArea.top || y0 > c.chartArea.bottom) return;
+    const x = c.ctx; x.save(); x.beginPath(); x.setLineDash([4, 4]);
+    x.strokeStyle = '#252530'; x.lineWidth = 1;
+    x.moveTo(c.chartArea.left, y0); x.lineTo(c.chartArea.right, y0);
+    x.stroke(); x.restore();
   }}
 }});
 
-// Precompute cumulative best keep run by index
-const cumulativeBest = RUNS.map((_, i) => {{
-  let best = null;
-  for (let j = 0; j <= i; j++) {{
-    if (RUNS[j].status === 'keep' && (best === null || RUNS[j].mean_sharpe > best.sharpe)) {{
-      best = {{ idx: j, tag: labels[j], sharpe: RUNS[j].mean_sharpe }};
-    }}
-  }}
-  return best;
+// Cumulative best
+const cumBest = RUNS.map((_, i) => {{
+  let b = null;
+  for (let j = 0; j <= i; j++)
+    if (RUNS[j].status === 'keep' && (!b || RUNS[j].mean_sharpe > b.s))
+      b = {{ t: labels[j], s: RUNS[j].mean_sharpe }};
+  return b;
 }});
 
-function navigateTo(idx) {{
-  if (idx < 0 || idx >= RUNS.length) return;
-  selectedIndex = idx;
-  selectedRun = RUNS[idx];
-  renderDetail(selectedRun);
-  // Highlight bar in chart
-  mainChart.setActiveElements([{{ datasetIndex: 0, index: idx }}]);
-  mainChart.update('none');
+// Navigation
+function navTo(i) {{
+  if (i < 0 || i >= RUNS.length) return;
+  selIdx = i; selRun = RUNS[i];
+  renderDetail(selRun);
+  chart.setActiveElements([{{ datasetIndex: 0, index: i }}]);
+  chart.update('none');
+  // Scroll chart to show selected bar
+  const wrap = document.querySelector('.chart-wrap');
+  const barW = chartInner.clientWidth / RUNS.length;
+  const target = barW * i - wrap.clientWidth / 2;
+  wrap.scrollTo({{ left: Math.max(0, target), behavior: 'smooth' }});
 }}
 
-function clearSelection() {{
-  selectedIndex = null;
-  selectedRun = null;
-  mainChart.setActiveElements([]);
-  mainChart.update('none');
-  document.getElementById('detail-placeholder').style.display = 'block';
-  document.getElementById('detail-content').style.display = 'none';
-  document.getElementById('nav-pos').textContent = '— / —';
+function clearSel() {{
+  selIdx = null; selRun = null;
+  chart.setActiveElements([]); chart.update('none');
+  document.getElementById('placeholder').style.display = 'block';
+  document.getElementById('detail').style.display = 'none';
+  document.getElementById('nav-pos').textContent = '\\u2014 / ' + RUNS.length;
   document.getElementById('nav-prev').disabled = true;
   document.getElementById('nav-next').disabled = true;
 }}
 
-document.getElementById('nav-prev').addEventListener('click', () => {{
-  if (selectedIndex !== null) navigateTo(selectedIndex - 1);
-}});
-document.getElementById('nav-next').addEventListener('click', () => {{
-  if (selectedIndex !== null) navigateTo(selectedIndex + 1);
-  else navigateTo(0);
-}});
+document.getElementById('nav-prev').onclick = () => selIdx !== null && navTo(selIdx - 1);
+document.getElementById('nav-next').onclick = () => selIdx !== null ? navTo(selIdx + 1) : navTo(0);
 
 document.addEventListener('keydown', e => {{
-  if (e.key === 'ArrowLeft') {{ e.preventDefault(); selectedIndex !== null ? navigateTo(selectedIndex - 1) : navigateTo(0); }}
-  if (e.key === 'ArrowRight') {{ e.preventDefault(); selectedIndex !== null ? navigateTo(selectedIndex + 1) : navigateTo(0); }}
-  if (e.key === 'Escape') clearSelection();
+  if (e.key === 'ArrowLeft') {{ e.preventDefault(); selIdx !== null ? navTo(selIdx - 1) : navTo(0); }}
+  if (e.key === 'ArrowRight') {{ e.preventDefault(); selIdx !== null ? navTo(selIdx + 1) : navTo(0); }}
+  if (e.key === 'Escape') clearSel();
 }});
 
-// Touch swipe to navigate
-let touchStartX = 0;
-document.addEventListener('touchstart', e => {{ touchStartX = e.changedTouches[0].clientX; }}, {{ passive: true }});
+// Touch swipe
+let tx = 0;
+document.addEventListener('touchstart', e => {{ tx = e.changedTouches[0].clientX; }}, {{ passive: true }});
 document.addEventListener('touchend', e => {{
-  const dx = e.changedTouches[0].clientX - touchStartX;
-  if (Math.abs(dx) < 40) return;
-  if (dx < 0) {{ selectedIndex !== null ? navigateTo(selectedIndex + 1) : navigateTo(0); }}
-  else {{ selectedIndex !== null ? navigateTo(selectedIndex - 1) : navigateTo(0); }}
+  const dx = e.changedTouches[0].clientX - tx;
+  if (Math.abs(dx) < 50) return;
+  dx < 0 ? (selIdx !== null ? navTo(selIdx + 1) : navTo(0)) : (selIdx !== null ? navTo(selIdx - 1) : navTo(0));
 }}, {{ passive: true }});
 
-// Single chart instance
-const cfg = METRIC_CONFIG.sharpe;
-const mainCtx = document.getElementById('main-chart').getContext('2d');
-const mainChart = new Chart(mainCtx, {{
+// Chart
+const cfg = MC.sharpe;
+const ctx = document.getElementById('chart').getContext('2d');
+const chart = new Chart(ctx, {{
   data: {{
     labels,
     datasets: [
-      {{
-        type: 'bar',
-        label: 'main',
-        data: cfg.barData(),
-        backgroundColor: getColors('sharpe'),
-        borderWidth: 0,
-        borderRadius: 2,
-      }},
-      {{
-        type: 'line',
-        label: 'keep frontier',
-        data: cfg.lineData(),
-        borderColor: 'rgba(79,195,247,0.4)',
-        borderWidth: 1.5,
-        pointRadius: 0,
-        fill: false,
-        spanGaps: true,
-        tension: 0,
-      }}
+      {{ type: 'bar', label: 'main', data: cfg.bars(), backgroundColor: colors('sharpe'),
+         borderWidth: 0, borderRadius: 2 }},
+      {{ type: 'line', label: 'frontier', data: cfg.line(),
+         borderColor: 'rgba(79,195,247,0.4)', borderWidth: 1.5,
+         pointRadius: 0, fill: false, spanGaps: true, tension: 0 }},
     ]
   }},
   options: {{
-    responsive: false,
+    responsive: true,
     maintainAspectRatio: false,
-    onClick: (e, elements) => {{
-      if (!elements.length) return;
-      const idx = elements[0].index;
-      if (idx === selectedIndex) {{
-        clearSelection();
-      }} else {{
-        navigateTo(idx);
-      }}
+    onClick: (e, els) => {{
+      if (!els.length) return;
+      els[0].index === selIdx ? clearSel() : navTo(els[0].index);
     }},
     plugins: {{
       legend: {{ display: false }},
       tooltip: {{
         callbacks: {{
-          title: (items) => labels[items[0].dataIndex],
-          label: (item) => {{
-            if (item.datasetIndex !== 0) return null;
-            return METRIC_CONFIG[chartMetric].tooltip(RUNS[item.dataIndex]);
-          }}
+          title: items => labels[items[0].dataIndex],
+          label: item => item.datasetIndex !== 0 ? null : MC[chartMetric].tip(RUNS[item.dataIndex]),
         }},
-        backgroundColor: '#1a1a2e',
-        titleColor: '#e0e0ff',
-        bodyColor: '#888',
-        borderColor: '#333',
-        borderWidth: 1,
-        padding: 10,
+        backgroundColor: '#14141e', titleColor: '#e0e0f0',
+        bodyColor: '#707088', borderColor: '#2a2a34', borderWidth: 1, padding: 10,
       }}
     }},
     scales: {{
-      x: {{
-        grid: {{ display: false }},
-        ticks: {{ color: '#444', maxRotation: 60, font: {{ size: 9 }} }}
-      }},
-      y: {{
-        grid: {{ color: '#1a1a1a' }},
-        ticks: {{ color: '#555', font: {{ size: 10 }}, callback: cfg.yTick }},
-        border: {{ dash: [2, 2] }}
-      }}
+      x: {{ grid: {{ display: false }}, ticks: {{ color: '#383848', maxRotation: 60, font: {{ size: 9 }} }} }},
+      y: {{ grid: {{ color: '#141420' }}, border: {{ dash: [2, 2] }},
+           ticks: {{ color: '#484858', font: {{ size: 10 }}, callback: cfg.yTick }} }},
     }}
   }}
 }});
 
-function setChartMetric(metric) {{
-  chartMetric = metric;
-  const mcfg = METRIC_CONFIG[metric];
-  mainChart.data.datasets[0].data = mcfg.barData();
-  mainChart.data.datasets[0].backgroundColor = getColors(metric);
-  mainChart.data.datasets[1].data = mcfg.lineData();
-  mainChart.options.scales.y.ticks.callback = mcfg.yTick;
-  // Reset then apply suggestedMin/Max
-  delete mainChart.options.scales.y.suggestedMin;
-  delete mainChart.options.scales.y.suggestedMax;
-  Object.assign(mainChart.options.scales.y, mcfg.yOpts);
-  mainChart.update();
-  document.getElementById('legend-keep-dot').style.background = mcfg.keepColor;
-  document.getElementById('hide-neg-label').style.display =
-    metric === 'sharpe' ? 'flex' : 'none';
-  // Update frontier line color to match metric
-  const lineColor = metric === 'sharpe' ? 'rgba(79,195,247,0.4)' :
-                    metric === 'dd' ? 'rgba(255,152,0,0.4)' : 'rgba(102,187,106,0.4)';
-  mainChart.data.datasets[1].borderColor = lineColor;
+function setMetric(m) {{
+  chartMetric = m;
+  const c = MC[m];
+  chart.data.datasets[0].data = c.bars();
+  chart.data.datasets[0].backgroundColor = colors(m);
+  chart.data.datasets[1].data = c.line();
+  chart.data.datasets[1].borderColor = m === 'sharpe' ? 'rgba(79,195,247,0.4)' :
+    m === 'dd' ? 'rgba(255,152,0,0.4)' : 'rgba(102,187,106,0.4)';
+  chart.options.scales.y.ticks.callback = c.yTick;
+  delete chart.options.scales.y.suggestedMin;
+  delete chart.options.scales.y.suggestedMax;
+  if (m === 'winrate') {{ chart.options.scales.y.suggestedMin = 0; chart.options.scales.y.suggestedMax = 1; }}
+  chart.update();
+  document.getElementById('leg-keep').style.background = c.color;
+  document.getElementById('hide-neg-label').style.display = m === 'sharpe' ? 'flex' : 'none';
 }}
 
-// Chart tab switching
-document.querySelectorAll('.chart-tab').forEach(tab => {{
-  tab.addEventListener('click', () => {{
-    document.querySelectorAll('.chart-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    setChartMetric(tab.dataset.chart);
-  }});
-}});
+document.querySelectorAll('#chart-tabs .tab').forEach(t =>
+  t.addEventListener('click', () => {{
+    document.querySelectorAll('#chart-tabs .tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    setMetric(t.dataset.chart);
+  }})
+);
+hideNeg.addEventListener('change', () => setMetric(chartMetric));
+document.getElementById('leg-keep').style.background = MC.sharpe.color;
 
-hideNeg.addEventListener('change', () => setChartMetric(chartMetric));
-
-// Size chart explicitly so it fills the panel height and scrolls horizontally
-const chartContainer = document.querySelector('.chart-container');
-const chartScroll = document.getElementById('chart-scroll');
-const BAR_MIN_PX = 7;
-
-function resizeChart() {{
-  const h = chartContainer.clientHeight;
-  const w = Math.max(RUNS.length * BAR_MIN_PX, chartContainer.clientWidth);
-  chartScroll.style.width = w + 'px';
-  mainChart.resize(w, h);
+// Chart scroll sizing — set min-width so bars don't crush on mobile
+const chartInner = document.getElementById('chart-inner');
+function setChartWidth() {{
+  const wrap = document.querySelector('.chart-wrap');
+  const minW = Math.max(RUNS.length * 7, wrap.clientWidth);
+  chartInner.style.minWidth = minW + 'px';
 }}
+window.addEventListener('resize', setChartWidth);
+setChartWidth();
 
-window.addEventListener('resize', resizeChart);
-resizeChart();
+// Symbol tabs
+document.querySelectorAll('#sym-tabs .tab').forEach(t =>
+  t.addEventListener('click', () => {{
+    document.querySelectorAll('#sym-tabs .tab').forEach(x => x.classList.remove('active'));
+    t.classList.add('active');
+    symMetric = t.dataset.metric;
+    if (selRun) renderSymbols(selRun);
+  }})
+);
 
-// Initialize legend dot
-document.getElementById('legend-keep-dot').style.background = METRIC_CONFIG.sharpe.keepColor;
-
-// Symbol tab switching
-document.querySelectorAll('.symbol-tab').forEach(tab => {{
-  tab.addEventListener('click', () => {{
-    document.querySelectorAll('.symbol-tab').forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    symbolMetric = tab.dataset.metric;
-    if (selectedRun) renderSymbolBars(selectedRun);
-  }});
-}});
-
-function renderSymbolBars(run) {{
-  const symbolsList = document.getElementById('symbols-list');
-  symbolsList.innerHTML = '';
-  if (!run.symbols || Object.keys(run.symbols).length === 0) return;
-
-  const metricKey = symbolMetric === 'sharpe' ? 'sharpe_ratio' :
-                    symbolMetric === 'dd' ? 'max_drawdown_pct' : 'total_return_pct';
-
-  const entries = Object.entries(run.symbols)
-    .map(([sym, d]) => [sym, d[metricKey] ?? 0])
-    .sort((a, b) => b[1] - a[1]);
-
-  const maxAbs = Math.max(...entries.map(([, v]) => Math.abs(v)), 0.001);
-  const cssClass = symbolMetric === 'dd' ? 'warn' : '';
-
+function renderSymbols(run) {{
+  const list = document.getElementById('sym-list');
+  list.innerHTML = '';
+  if (!run.symbols || !Object.keys(run.symbols).length) return;
+  const key = symMetric === 'sharpe' ? 'sharpe_ratio' : symMetric === 'dd' ? 'max_drawdown_pct' : 'total_return_pct';
+  const entries = Object.entries(run.symbols).map(([s, d]) => [s, d[key] ?? 0]).sort((a, b) => b[1] - a[1]);
+  const maxA = Math.max(...entries.map(([, v]) => Math.abs(v)), 0.001);
+  const cls = symMetric === 'dd' ? 'warn' : '';
   entries.forEach(([sym, val]) => {{
-    const pct = Math.abs(val) / maxAbs * 100;
-    const cls = cssClass || (val >= 0 ? 'pos' : 'neg');
+    const pct = Math.abs(val) / maxA * 100;
+    const c = cls || (val >= 0 ? 'pos' : 'neg');
     const row = document.createElement('div');
-    row.className = 'symbol-row';
-    row.innerHTML = `
-      <span class="symbol-name">${{sym}}</span>
-      <div class="symbol-bar-bg">
-        <div class="symbol-bar-fill ${{cls}}" style="width:${{pct.toFixed(1)}}%"></div>
-      </div>
-      <span class="symbol-val ${{cls}}">${{val.toFixed(2)}}</span>
-    `;
-    symbolsList.appendChild(row);
+    row.className = 'sym-row';
+    row.innerHTML = `<span class="sym-name">${{sym}}</span><div class="sym-bg"><div class="sym-fill ${{c}}" style="width:${{pct.toFixed(1)}}%"></div></div><span class="sym-val ${{c}}">${{val.toFixed(2)}}</span>`;
+    list.appendChild(row);
   }});
 }}
 
 function renderDetail(run) {{
-  document.getElementById('detail-placeholder').style.display = 'none';
-  document.getElementById('detail-content').style.display = 'block';
+  document.getElementById('placeholder').style.display = 'none';
+  document.getElementById('detail').style.display = 'block';
+  document.getElementById('nav-pos').textContent = (selIdx + 1) + ' / ' + RUNS.length;
+  document.getElementById('nav-prev').disabled = selIdx <= 0;
+  document.getElementById('nav-next').disabled = selIdx >= RUNS.length - 1;
 
-  // Nav controls
-  const idx = selectedIndex;
-  document.getElementById('nav-pos').textContent = (idx + 1) + ' / ' + RUNS.length;
-  document.getElementById('nav-prev').disabled = idx <= 0;
-  document.getElementById('nav-next').disabled = idx >= RUNS.length - 1;
+  const b = cumBest[selIdx];
+  document.getElementById('bsf-tag').textContent = b ? b.t : '\\u2014';
+  document.getElementById('bsf-sharpe').textContent = b ? b.s.toFixed(4) : '\\u2014';
 
-  // Cumulative best
-  const best = cumulativeBest[idx];
-  if (best) {{
-    document.getElementById('bsf-tag').textContent = best.tag;
-    document.getElementById('bsf-sharpe').textContent = best.sharpe.toFixed(4);
-  }} else {{
-    document.getElementById('bsf-tag').textContent = '—';
-    document.getElementById('bsf-sharpe').textContent = '—';
-  }}
-
-  document.getElementById('detail-tag').textContent = run.tag || run.commit;
-  document.getElementById('detail-commit').textContent = run.commit;
-
-  const badge = document.getElementById('detail-badge');
+  document.getElementById('d-tag').textContent = run.tag || run.commit;
+  document.getElementById('d-commit').textContent = run.commit;
+  const badge = document.getElementById('d-badge');
   badge.textContent = run.status;
   badge.className = 'badge badge-' + run.status;
+  document.getElementById('d-desc').textContent = run.description;
 
-  document.getElementById('detail-desc').textContent = run.description;
-
-  const sharpeEl = document.getElementById('m-sharpe');
-  sharpeEl.textContent = run.mean_sharpe.toFixed(4);
-  sharpeEl.className = 'metric-val ' + (run.mean_sharpe >= 0 ? 'pos' : 'neg');
-
-  const ddEl = document.getElementById('m-dd');
-  ddEl.textContent = run.mean_max_dd.toFixed(2) + '%';
-  ddEl.className = 'metric-val warn';
-
-  const retEl = document.getElementById('m-return');
-  if (run.mean_total_return !== null && run.mean_total_return !== undefined) {{
-    retEl.textContent = run.mean_total_return.toFixed(2) + '%';
-    retEl.className = 'metric-val ' + (run.mean_total_return >= 0 ? 'pos' : 'neg');
+  const se = document.getElementById('m-sharpe');
+  se.textContent = run.mean_sharpe.toFixed(4);
+  se.className = 'm-val ' + (run.mean_sharpe >= 0 ? 'pos' : 'neg');
+  const de = document.getElementById('m-dd');
+  de.textContent = run.mean_max_dd.toFixed(2) + '%';
+  de.className = 'm-val warn';
+  const re = document.getElementById('m-ret');
+  if (run.mean_total_return != null) {{
+    re.textContent = run.mean_total_return.toFixed(2) + '%';
+    re.className = 'm-val ' + (run.mean_total_return >= 0 ? 'pos' : 'neg');
   }} else {{
-    retEl.textContent = '—';
-    retEl.className = 'metric-val neutral';
+    re.textContent = '\\u2014'; re.className = 'm-val neutral';
   }}
 
-  const symbolsSection = document.getElementById('symbols-section');
-  if (run.symbols && Object.keys(run.symbols).length > 0) {{
-    symbolsSection.style.display = 'block';
-    renderSymbolBars(run);
+  const ss = document.getElementById('sym-section');
+  if (run.symbols && Object.keys(run.symbols).length) {{
+    ss.style.display = 'block'; renderSymbols(run);
   }} else {{
-    symbolsSection.style.display = 'none';
+    ss.style.display = 'none';
   }}
 }}
 </script>
