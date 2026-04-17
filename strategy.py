@@ -214,8 +214,8 @@ class ORBStrategy(Strategy):
             self._best_price = None
             range_mid = (self._range_high + self._range_low) / 2
             narrow_range = range_height / range_mid < 0.002
-            long_sl = range_mid if narrow_range else self._range_low
-            short_sl = range_mid if narrow_range else self._range_high
+            long_sl = (self._range_low + 2 * range_height / 3) if narrow_range else self._range_low
+            short_sl = (self._range_high - 2 * range_height / 3) if narrow_range else self._range_high
             is_london = sess_key == (8, 0)
             is_ny = sess_key == (13, 30)
             if close > long_trigger and not (is_ny and narrow_range):
