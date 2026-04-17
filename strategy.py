@@ -220,7 +220,7 @@ class ORBStrategy(Strategy):
             if close > long_trigger:
                 self.buy(sl=long_sl, tp=close + tp_dist)
                 self._trades_this_session += 1
-            elif close < short_trigger and not is_london:
+            elif close < short_trigger and not (is_london and narrow_range):
                 self.sell(sl=short_sl, tp=close - tp_dist)
                 self._trades_this_session += 1
 
