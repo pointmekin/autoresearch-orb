@@ -179,7 +179,7 @@ class ORBStrategy(Strategy):
 
         # ── Time filter: only trade within 50 min (10 bars) after range forms ──
         bars_since_range = bars_into_session - self.opening_range_bars
-        if bars_since_range < 1 or bars_since_range > 10:
+        if bars_since_range < 2 or bars_since_range > 10:
             return
 
         # ── Trailing stop management ──────────────────────────────────────
