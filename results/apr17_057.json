@@ -1,0 +1,178 @@
+{
+  "tag": "apr17_057",
+  "timestamp": "2026-04-17T11:58:41.900352",
+  "params": {
+    "opening_range_bars": 6,
+    "breakout_threshold": 0.001,
+    "stop_loss_range_multiple": 1.8,
+    "take_profit_range_multiple": 1.0,
+    "max_trades_per_session": 1,
+    "min_range_pct": 0.0,
+    "close_at_session_end": true,
+    "allowed_weekdays": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "sessions": [
+      [
+        8,
+        0,
+        12,
+        30
+      ],
+      [
+        13,
+        30,
+        20,
+        0
+      ]
+    ]
+  },
+  "notes": "",
+  "results": {
+    "EURUSD=X": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    },
+    "USDJPY=X": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    },
+    "GBPUSD=X": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    },
+    "AUDUSD=X": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    },
+    "USDCAD=X": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    },
+    "USDCHF=X": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    },
+    "NZDUSD=X": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    },
+    "EURJPY=X": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    },
+    "GC=F": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    },
+    "SI=F": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    },
+    "CL=F": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    },
+    "SPY": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    },
+    "QQQ": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    },
+    "ES=F": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    },
+    "NQ=F": {
+      "sharpe_ratio": -999.0,
+      "max_drawdown_pct": -999.0,
+      "total_return_pct": -999.0,
+      "calmar_ratio": -999.0,
+      "num_trades": 0,
+      "win_rate": 0.0,
+      "error": "name 'close' is not defined"
+    }
+  },
+  "aggregate": {
+    "mean_sharpe": -999.0,
+    "median_sharpe": -999.0,
+    "mean_max_drawdown": -999.0,
+    "mean_total_return": -999.0,
+    "num_symbols": 15
+  }
+}

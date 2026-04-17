@@ -1,0 +1,30 @@
+/Library/Frameworks/Python.framework/Versions/3.9/lib/python3.9/site-packages/backtesting/_stats.py:122: RuntimeWarning: divide by zero encountered in scalar divide
+  s.loc['Sortino Ratio'] = np.clip((annualized_return - risk_free_rate) / (np.sqrt(np.mean(day_returns.clip(-np.inf, 0)**2)) * np.sqrt(annual_trading_days)), 0, np.inf)  # noqa: E501
+
+──────────────────────────────────────────────────
+TAG:              apr17_033
+mean_sharpe:      -65.3368
+median_sharpe:    1.5822
+mean_max_drawdown:-0.76%
+mean_total_return:2.1%
+num_symbols:      15
+params:           {"opening_range_bars": 6, "breakout_threshold": 0.001, "stop_loss_range_multiple": 1.8, "take_profit_range_multiple": 1.0, "trailing_stop_activation": 0.5, "trailing_stop_distance": 0.3, "max_trades_per_session": 1, "min_range_pct": 0.0, "close_at_session_end": true, "allowed_weekdays": [1, 2, 3, 4], "sessions": [[8, 0, 12, 30], [13, 30, 20, 0]]}
+──────────────────────────────────────────────────
+  EURUSD=X       sharpe=-0.4133  dd=  -0.27%  ret=  -0.07%  trades=5
+  USDJPY=X       sharpe=-1.0012  dd=  -0.37%  ret=  -0.18%  trades=6
+  GBPUSD=X       sharpe= 1.5822  dd=  -0.24%  ret=   0.39%  trades=5
+  AUDUSD=X       sharpe= 1.5998  dd=  -0.36%  ret=   0.77%  trades=9
+  USDCAD=X       sharpe= -999.0  dd=    0.0%  ret=    0.0%  trades=0
+  USDCHF=X       sharpe=-2.7563  dd=   -0.2%  ret=   -0.2%  trades=1
+  NZDUSD=X       sharpe= 0.0962  dd=  -0.55%  ret=   0.04%  trades=11
+  EURJPY=X       sharpe=-0.3932  dd=  -0.19%  ret=  -0.05%  trades=3
+  GC=F           sharpe= 2.2492  dd=  -1.15%  ret=   2.07%  trades=6
+  SI=F           sharpe= 4.0933  dd=  -2.26%  ret=   8.37%  trades=6
+  CL=F           sharpe= 5.3037  dd=   -2.4%  ret=  17.18%  trades=15
+  SPY            sharpe= 3.1651  dd=  -0.46%  ret=   0.47%  trades=1
+  QQQ            sharpe= 2.9101  dd=  -0.66%  ret=   0.66%  trades=1
+  ES=F           sharpe= 0.9077  dd=  -0.93%  ret=    0.6%  trades=6
+  NQ=F           sharpe= 1.6045  dd=  -1.37%  ret=    1.4%  trades=8
+──────────────────────────────────────────────────
+
+  [saved] /Users/dhanabordeemekintharanggur/Desktop/Projects/autoresearch/autoresearch-orb/results/apr17_033.json

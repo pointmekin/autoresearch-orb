@@ -1,0 +1,30 @@
+/Library/Frameworks/Python.framework/Versions/3.9/lib/python3.9/site-packages/backtesting/_stats.py:122: RuntimeWarning: divide by zero encountered in scalar divide
+  s.loc['Sortino Ratio'] = np.clip((annualized_return - risk_free_rate) / (np.sqrt(np.mean(day_returns.clip(-np.inf, 0)**2)) * np.sqrt(annual_trading_days)), 0, np.inf)  # noqa: E501
+
+──────────────────────────────────────────────────
+TAG:              apr17_006
+mean_sharpe:      -66.1313
+median_sharpe:    -0.3207
+mean_max_drawdown:-1.19%
+mean_total_return:1.56%
+num_symbols:      15
+params:           {"opening_range_bars": 6, "breakout_threshold": 0.001, "stop_loss_range_multiple": 1.8, "take_profit_range_multiple": 1.0, "trailing_stop_activation": 0.5, "trailing_stop_distance": 0.3, "max_trades_per_session": 1, "min_range_pct": 0.0, "close_at_session_end": true, "allowed_weekdays": [1, 2, 3, 4], "sessions": [[8, 0, 12, 30], [13, 30, 20, 0]]}
+──────────────────────────────────────────────────
+  EURUSD=X       sharpe=-0.3516  dd=  -0.32%  ret=  -0.08%  trades=8
+  USDJPY=X       sharpe=-2.1579  dd=   -0.4%  ret=  -0.37%  trades=6
+  GBPUSD=X       sharpe= -0.485  dd=  -0.56%  ret=  -0.14%  trades=11
+  AUDUSD=X       sharpe=-1.5633  dd=  -1.12%  ret=  -0.87%  trades=13
+  USDCAD=X       sharpe=-3.8815  dd=  -0.86%  ret=  -0.86%  trades=4
+  USDCHF=X       sharpe= 0.6787  dd=   -0.3%  ret=   0.21%  trades=8
+  NZDUSD=X       sharpe= -1.438  dd=  -0.89%  ret=  -0.67%  trades=13
+  EURJPY=X       sharpe=-0.3207  dd=  -0.16%  ret=  -0.03%  trades=2
+  GC=F           sharpe= 3.1984  dd=  -1.29%  ret=   4.53%  trades=15
+  SI=F           sharpe= 3.2095  dd=   -3.4%  ret=   9.83%  trades=15
+  CL=F           sharpe= 2.3589  dd=  -5.82%  ret=   7.85%  trades=21
+  SPY            sharpe= 3.1651  dd=  -0.46%  ret=   0.47%  trades=1
+  QQQ            sharpe= -999.0  dd=    0.0%  ret=    0.0%  trades=0
+  ES=F           sharpe= 3.6238  dd=  -0.67%  ret=   2.73%  trades=13
+  NQ=F           sharpe= 0.9938  dd=  -1.53%  ret=   0.81%  trades=13
+──────────────────────────────────────────────────
+
+  [saved] /Users/dhanabordeemekintharanggur/Desktop/Projects/autoresearch/autoresearch-orb/results/apr17_006.json

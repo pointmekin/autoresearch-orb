@@ -1,0 +1,32 @@
+/Library/Frameworks/Python.framework/Versions/3.9/lib/python3.9/site-packages/backtesting/_stats.py:122: RuntimeWarning: divide by zero encountered in scalar divide
+  s.loc['Sortino Ratio'] = np.clip((annualized_return - risk_free_rate) / (np.sqrt(np.mean(day_returns.clip(-np.inf, 0)**2)) * np.sqrt(annual_trading_days)), 0, np.inf)  # noqa: E501
+/Library/Frameworks/Python.framework/Versions/3.9/lib/python3.9/site-packages/backtesting/_stats.py:122: RuntimeWarning: divide by zero encountered in scalar divide
+  s.loc['Sortino Ratio'] = np.clip((annualized_return - risk_free_rate) / (np.sqrt(np.mean(day_returns.clip(-np.inf, 0)**2)) * np.sqrt(annual_trading_days)), 0, np.inf)  # noqa: E501
+
+──────────────────────────────────────────────────
+TAG:              apr17_024
+mean_sharpe:      -132.5369
+median_sharpe:    0.4095
+mean_max_drawdown:-0.95%
+mean_total_return:2.03%
+num_symbols:      15
+params:           {"opening_range_bars": 6, "breakout_threshold": 0.001, "stop_loss_range_multiple": 1.8, "take_profit_range_multiple": 1.0, "trailing_stop_activation": 0.5, "trailing_stop_distance": 0.3, "max_trades_per_session": 1, "min_range_pct": 0.0, "close_at_session_end": true, "allowed_weekdays": [1, 2, 3, 4], "sessions": [[8, 0, 12, 30], [13, 30, 20, 0]]}
+──────────────────────────────────────────────────
+  EURUSD=X       sharpe= 0.4095  dd=  -0.27%  ret=   0.07%  trades=5
+  USDJPY=X       sharpe= 1.6874  dd=  -0.11%  ret=   0.27%  trades=5
+  GBPUSD=X       sharpe= 1.8162  dd=  -0.37%  ret=   0.53%  trades=7
+  AUDUSD=X       sharpe=-0.8585  dd=  -1.06%  ret=  -0.53%  trades=13
+  USDCAD=X       sharpe=-3.5762  dd=  -0.71%  ret=  -0.71%  trades=4
+  USDCHF=X       sharpe=   1.01  dd=  -0.34%  ret=   0.21%  trades=5
+  NZDUSD=X       sharpe= -0.854  dd=  -0.99%  ret=  -0.43%  trades=11
+  EURJPY=X       sharpe=-0.3932  dd=  -0.19%  ret=  -0.05%  trades=3
+  GC=F           sharpe=  0.847  dd=  -2.68%  ret=   1.26%  trades=13
+  SI=F           sharpe= 2.4731  dd=  -3.09%  ret=   6.56%  trades=11
+  CL=F           sharpe=   4.99  dd=  -2.49%  ret=   22.0%  trades=23
+  SPY            sharpe= -999.0  dd=    0.0%  ret=    0.0%  trades=0
+  QQQ            sharpe= -999.0  dd=    0.0%  ret=    0.0%  trades=0
+  ES=F           sharpe= 2.5936  dd=  -0.67%  ret=   1.37%  trades=7
+  NQ=F           sharpe=-0.1989  dd=  -1.26%  ret=  -0.14%  trades=7
+──────────────────────────────────────────────────
+
+  [saved] /Users/dhanabordeemekintharanggur/Desktop/Projects/autoresearch/autoresearch-orb/results/apr17_024.json

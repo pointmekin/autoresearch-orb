@@ -48,3 +48,60 @@ f904549	0.933	-1.19	discard	SL at range midpoint: tighter stops = more stop-outs
 510419e	1.0302	-1.42	discard	TP=1.5x: higher return but worse Sharpe, more variance
 65d823b	0.8518	-1.4	discard	2 trades/session: over-trading hurt, 1 trade/session is optimal
 8747f65	1.1445	-1.27	keep	SL at range boundary (low/high) instead of 1.8x range height
+42e8743	1.0063	-1.42	discard	TP=1.5x with SL at range boundary: wider TP doesn't fill enough
+c5c7238	0.2356	-1.45	discard	4-bar (20min) range: noisier levels, 6-bar optimal
+5dc0605	-199.94	-200.67	discard	trailing stop only, no fixed TP: commodities got 0 trades, forex worse
+2c05113	-66.13	-1.19	discard	breakout momentum 30% body filter: helps commodities, kills forex
+53c89de	-66.27	-1.19	discard	confirmation bar: enters later at worse price, worse Sharpe
+37b21a8	0.8417	-1.48	discard	1.5hr window: more late chop trades, worse Sharpe
+2f48c92	1.0356	-1.36	discard	0.05% threshold: slightly worse, 0.1% filters weak breakouts better
+45067ef	0.9925	-1.28	discard	asymmetric TP 1.2x/0.8x: worse than symmetric 1.0x
+5f25255	0.5758	-1.10	discard	range contraction filter: filters out good wide-range breakouts
+3ac63b1	0.2742	-1.18	discard	prior session momentum filter: no predictive value for direction
+5c2f22a	-198.52	-0.95	discard	3-bar window: USDCAD/EURJPY/QQQ got 0 trades
+4285b4f	0.628	-1.67	discard	8-bar (40min) range: worse Sharpe, 6-bar still optimal
+7e074ff	0.4848	-1.30	discard	Tue-Thu only: Friday trades were profitable, skip only Monday
+295171e	-65.19	-1.14	discard	min range 0.15%: EURJPY got 0 trades, threshold too high
+9801322	1.2252	-1.21	keep	adaptive SL: midpoint for narrow ranges (<0.3%), boundary for wide — new best
+e054075	1.2881	-1.20	keep	adaptive SL 0.2% threshold: more pairs use midpoint SL, new best
+b21da76	1.1671	-1.26	discard	adaptive SL 0.1% threshold: too few pairs use midpoint SL
+0e3d48a	1.1939	-1.23	discard	adaptive SL 0.4% threshold: commodities start using midpoint SL, worse
+82293e8	1.1076	-1.29	discard	adaptive SL + TP=1.2x: higher return but lower Sharpe
+c791130	1.0432	-1.31	discard	adaptive SL + 5-bar range: worse, 6-bar still optimal
+f4114eb	1.3451	-1.08	keep	adaptive SL + skip London shorts: London shorts were drag, new best
+c25a6b0	-132.54	-0.95	discard	longs only: SPY/QQQ got 0 trades, NY shorts are valuable
+4aae789	0.9666	-1.04	discard	adaptive SL + skip London shorts + TP=0.8x: tighter TP hurts
+a2e44fd	1.3709	-1.01	keep	adaptive SL + skip London shorts + 10-bar window: tighter window avoids late chop, new best
+222a1f7	1.2564	-0.96	discard	8-bar window: too tight, misses good trades, 10-bar optimal
+c27ccbb	1.3093	-1.05	discard	11-bar window: worse than 10-bar, 10 is optimal
+c9eac29	0.875	-1.20	discard	7-bar range: worse, 6-bar still optimal
+ab9163c	-265.10	-0.85	discard	0.2% threshold: 4 symbols got 0 trades, too strict
+c41f6f2	1.3253	-1.03	discard	adaptive SL 0.15% threshold: worse than 0.2%
+0536ed5	1.3699	-1.00	discard	adaptive SL 0.25% threshold: essentially same as 0.2%, no improvement
+25a26af	-65.34	-0.76	discard	London longs + NY shorts only: too restrictive, USDCAD 0 trades
+0200007	1.4411	-1.10	keep	skip London shorts only for narrow-range pairs: forex improved, commodities keep shorts, new best
+045ad05	1.3477	-1.02	discard	9-bar window: worse than 10-bar
+f6b4d18	1.4903	-1.05	keep	narrow-range directional: London longs + NY shorts only for narrow pairs, both for wide — new best
+3966cfc	-65.01	-1.03	discard	0.3% threshold + directional: USDCAD 0 trades
+aab1cde	1.4903	-1.05	discard	min breakout distance: filter redundant, identical to baseline
+d8bf44e	1.4536	-1.06	discard	SL at 1/3 range for narrow: worse than midpoint SL
+c7735f9	1.5222	-1.04	keep	SL at 2/3 range for narrow pairs: wider than midpoint, better survival, new best
+5609055	1.4869	-1.05	discard	SL at 3/4 range: worse than 2/3, 2/3 is optimal
+8a336d2	1.514	-1.05	discard	SL at 5/8 range: worse than 2/3
+48f2035	1.459	-1.37	discard	no time filter: more late chop trades, worse DD
+2a170af	1.5222	-1.04	discard	disable trailing stop: identical, trail still dead code
+dd01a1c	1.4831	-1.04	discard	TP=0.8x for narrow: worse, 1.0x optimal for all
+917204e	1.2862	-1.19	discard	TP=1.2x for wide: higher return but worse Sharpe
+a9574ff	1.3091	-1.06	discard	TP=0.9x: worse, 1.0x confirmed optimal
+8e24b59	1.0324	-1.06	discard	midpoint SL for wide: commodities need boundary SL
+38724f4	1.5087	-1.05	discard	SL at 60% range: worse than 2/3 (67%), 2/3 optimal
+835c400	1.5222	-1.04	discard	2 trades wide: identical, 2nd trade never fires in 10-bar window
+f4602cb	1.3803	-1.11	discard	0.05% threshold for narrow: worse, 0.1% optimal for all
+dd51c40	-131.57	-1.00	discard	0.2% threshold for narrow: USDJPY/EURJPY 0 trades
+619bc57	1.2877	-1.14	discard	prior bar direction filter: filters good trades, no benefit
+7988976	1.5986	-0.92	keep	skip first bar after range: fewer false breakouts, new best
+3dec95e	1.6066	-0.92	keep	skip first 2 bars after range: even better filtering, new best
+13ce29f	1.5844	-0.89	discard	skip 3 bars: worse than 2, 2 is optimal
+14fa3e5	1.6066	-0.92	keep	remove dead trailing stop code: identical result, cleaner code
+d2c89af	1.4045	-1.0	discard	TP=1.1x: worse
+0f42094	-131.67	-0.95	discard	0.15% threshold: some symbols 0 trades

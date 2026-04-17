@@ -177,6 +177,12 @@ Commit only the working experiments. The TSV captures the full history including
 
 When you feel stuck, consult this list. You are also encouraged to generate your own hypotheses.
 
+**Tuning the TP / SL ratio**
+- Try increase the take profit to stop loss ratio
+
+**Optimization**
+- Try optimizing for win rate as well
+
 **Parameter tuning:**
 - Range window: 3 bars (15m), 6 bars (30m), 12 bars (1h) — which is most robust at 5m?
 - Breakout threshold: 0 (any breakout), 0.1%, 0.2%, 0.5%

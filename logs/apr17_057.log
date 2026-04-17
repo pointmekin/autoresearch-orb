@@ -1,0 +1,43 @@
+  [ERR]  EURUSD=X: name 'close' is not defined
+  [ERR]  USDJPY=X: name 'close' is not defined
+  [ERR]  GBPUSD=X: name 'close' is not defined
+  [ERR]  AUDUSD=X: name 'close' is not defined
+  [ERR]  USDCAD=X: name 'close' is not defined
+  [ERR]  USDCHF=X: name 'close' is not defined
+  [ERR]  NZDUSD=X: name 'close' is not defined
+  [ERR]  EURJPY=X: name 'close' is not defined
+  [ERR]  GC=F: name 'close' is not defined
+  [ERR]  SI=F: name 'close' is not defined
+  [ERR]  CL=F: name 'close' is not defined
+  [ERR]  SPY: name 'close' is not defined
+  [ERR]  QQQ: name 'close' is not defined
+  [ERR]  ES=F: name 'close' is not defined
+  [ERR]  NQ=F: name 'close' is not defined
+
+──────────────────────────────────────────────────
+TAG:              apr17_057
+mean_sharpe:      -999.0
+median_sharpe:    -999.0
+mean_max_drawdown:-999.0%
+mean_total_return:-999.0%
+num_symbols:      15
+params:           {"opening_range_bars": 6, "breakout_threshold": 0.001, "stop_loss_range_multiple": 1.8, "take_profit_range_multiple": 1.0, "max_trades_per_session": 1, "min_range_pct": 0.0, "close_at_session_end": true, "allowed_weekdays": [1, 2, 3, 4], "sessions": [[8, 0, 12, 30], [13, 30, 20, 0]]}
+──────────────────────────────────────────────────
+  EURUSD=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  USDJPY=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  GBPUSD=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  AUDUSD=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  USDCAD=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  USDCHF=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  NZDUSD=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  EURJPY=X       sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  GC=F           sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  SI=F           sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  CL=F           sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  SPY            sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  QQQ            sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  ES=F           sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+  NQ=F           sharpe= -999.0  dd= -999.0%  ret= -999.0%  trades=0
+──────────────────────────────────────────────────
+
+  [saved] /Users/dhanabordeemekintharanggur/Desktop/Projects/autoresearch/autoresearch-orb/results/apr17_057.json

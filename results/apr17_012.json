@@ -1,0 +1,165 @@
+{
+  "tag": "apr17_012",
+  "timestamp": "2026-04-17T11:22:25.357353",
+  "params": {
+    "opening_range_bars": 6,
+    "breakout_threshold": 0.001,
+    "stop_loss_range_multiple": 1.8,
+    "take_profit_range_multiple": 1.0,
+    "trailing_stop_activation": 0.5,
+    "trailing_stop_distance": 0.3,
+    "max_trades_per_session": 1,
+    "min_range_pct": 0.0,
+    "close_at_session_end": true,
+    "allowed_weekdays": [
+      1,
+      2,
+      3,
+      4
+    ],
+    "sessions": [
+      [
+        8,
+        0,
+        12,
+        30
+      ],
+      [
+        13,
+        30,
+        20,
+        0
+      ]
+    ]
+  },
+  "notes": "",
+  "results": {
+    "EURUSD=X": {
+      "sharpe_ratio": 0.4095,
+      "max_drawdown_pct": -0.27,
+      "total_return_pct": 0.07,
+      "calmar_ratio": 0.2662,
+      "num_trades": 5,
+      "win_rate": 0.6
+    },
+    "USDJPY=X": {
+      "sharpe_ratio": -4.4296,
+      "max_drawdown_pct": -0.84,
+      "total_return_pct": -0.81,
+      "calmar_ratio": -0.9664,
+      "num_trades": 4,
+      "win_rate": 0.0
+    },
+    "GBPUSD=X": {
+      "sharpe_ratio": 1.639,
+      "max_drawdown_pct": -0.42,
+      "total_return_pct": 0.48,
+      "calmar_ratio": 1.1593,
+      "num_trades": 7,
+      "win_rate": 0.7143
+    },
+    "AUDUSD=X": {
+      "sharpe_ratio": -1.5149,
+      "max_drawdown_pct": -1.32,
+      "total_return_pct": -0.95,
+      "calmar_ratio": -0.7194,
+      "num_trades": 13,
+      "win_rate": 0.3846
+    },
+    "USDCAD=X": {
+      "sharpe_ratio": -3.8815,
+      "max_drawdown_pct": -0.86,
+      "total_return_pct": -0.86,
+      "calmar_ratio": -1.0,
+      "num_trades": 4,
+      "win_rate": 0.25
+    },
+    "USDCHF=X": {
+      "sharpe_ratio": -0.4069,
+      "max_drawdown_pct": -0.46,
+      "total_return_pct": -0.12,
+      "calmar_ratio": -0.2684,
+      "num_trades": 5,
+      "win_rate": 0.6
+    },
+    "NZDUSD=X": {
+      "sharpe_ratio": -1.2971,
+      "max_drawdown_pct": -1.23,
+      "total_return_pct": -0.67,
+      "calmar_ratio": -0.5429,
+      "num_trades": 11,
+      "win_rate": 0.4545
+    },
+    "EURJPY=X": {
+      "sharpe_ratio": -0.3932,
+      "max_drawdown_pct": -0.19,
+      "total_return_pct": -0.05,
+      "calmar_ratio": -0.2442,
+      "num_trades": 3,
+      "win_rate": 0.3333
+    },
+    "GC=F": {
+      "sharpe_ratio": 0.847,
+      "max_drawdown_pct": -2.68,
+      "total_return_pct": 1.26,
+      "calmar_ratio": 0.4697,
+      "num_trades": 13,
+      "win_rate": 0.6154
+    },
+    "SI=F": {
+      "sharpe_ratio": 2.4731,
+      "max_drawdown_pct": -3.09,
+      "total_return_pct": 6.56,
+      "calmar_ratio": 2.12,
+      "num_trades": 11,
+      "win_rate": 0.6364
+    },
+    "CL=F": {
+      "sharpe_ratio": 2.1977,
+      "max_drawdown_pct": -3.24,
+      "total_return_pct": 4.58,
+      "calmar_ratio": 1.4143,
+      "num_trades": 8,
+      "win_rate": 0.75
+    },
+    "SPY": {
+      "sharpe_ratio": 3.1651,
+      "max_drawdown_pct": -0.46,
+      "total_return_pct": 0.47,
+      "calmar_ratio": 1.0195,
+      "num_trades": 1,
+      "win_rate": 1.0
+    },
+    "QQQ": {
+      "sharpe_ratio": 2.9101,
+      "max_drawdown_pct": -0.66,
+      "total_return_pct": 0.66,
+      "calmar_ratio": 1.0082,
+      "num_trades": 1,
+      "win_rate": 1.0
+    },
+    "ES=F": {
+      "sharpe_ratio": 2.5936,
+      "max_drawdown_pct": -0.67,
+      "total_return_pct": 1.37,
+      "calmar_ratio": 2.0457,
+      "num_trades": 7,
+      "win_rate": 0.7143
+    },
+    "NQ=F": {
+      "sharpe_ratio": -0.1989,
+      "max_drawdown_pct": -1.26,
+      "total_return_pct": -0.14,
+      "calmar_ratio": -0.1077,
+      "num_trades": 7,
+      "win_rate": 0.4286
+    }
+  },
+  "aggregate": {
+    "mean_sharpe": 0.2742,
+    "median_sharpe": 0.4095,
+    "mean_max_drawdown": -1.18,
+    "mean_total_return": 0.79,
+    "num_symbols": 15
+  }
+}
