@@ -52,10 +52,10 @@ PARAMS = {
     "take_profit_range_multiple": 1.0,
 
     # Trailing stop: activate after price moves this fraction of range in favor
-    "trailing_stop_activation": 0.5,
+    "trailing_stop_activation": 99.0,
 
     # Trailing stop distance as fraction of range height
-    "trailing_stop_distance": 0.3,
+    "trailing_stop_distance": 99.0,
 
     # Maximum number of trades per session per symbol (0 = unlimited)
     "max_trades_per_session": 1,
