@@ -213,7 +213,7 @@ class ORBStrategy(Strategy):
         if not self.position:
             self._best_price = None
             range_mid = (self._range_high + self._range_low) / 2
-            narrow_range = range_height / range_mid < 0.003
+            narrow_range = range_height / range_mid < 0.002
             long_sl = range_mid if narrow_range else self._range_low
             short_sl = range_mid if narrow_range else self._range_high
             if close > long_trigger:
